@@ -163,127 +163,337 @@
 % \tableofcontents
 % \end{frame}
 
-\begin{frame}[fragile]{Undo Kinds in a Collaborative Setting}
+\subsection{Semantics with Multiple Registers}
+
+\begin{frame}[fragile]
   \begin{figure}
-    \center
     \begin{adjustbox}{max totalsize={\textwidth}{0.75\textheight},center}
+      \begin{tikzpicture}[node distance=0.23cm]
+        \coordinate (c1) at (0,0);
+
         \tikzset{
-          treenode/.style = {shape=rectangle, rounded corners,
-                             draw, align=center,},
-          root/.style     = {treenode},
-          dummy/.style    = {circle,draw}
+          canvas/.style={
+            rectangle,
+            draw,
+            anchor = west,
+            inner sep = 4pt,
+          },
+          rect/.style={
+            rectangle,
+            minimum width = 1.2cm, 
+            minimum height = 0.5cm,
+            inner sep = 0.1cm,
+            text = white,
+            fill = #1,
+          },
+          optrans/.style={
+            <-,bend right=90,>={Stealth[round]},
+            swap,
+            black!70,
+          },
+          casediv/.style={
+            black!70,
+          },
         }
-        \begin{tikzpicture}
-          [
-            grow                    = right,
-            sibling distance        = 6em,
-            level distance          = 10em,
-            edge from parent/.style = {draw, -latex},
-            every node/.style       = {font=\footnotesize},
-            sloped
-          ]
-          \node [root,dummy] {}
-            child { node [treenode, align=center] {selective undo}
-              edge from parent node [below] {any order} }
-            child { node [treenode] {undo}
-              child { node [treenode] {global undo}
-                edge from parent node [below] {all ops} }
-              child { node [treenode] {local undo}
-                edge from parent node [above, align=center] {own ops} }
-              edge from parent node [above, align=center] {rev. chron. order} };
-        \end{tikzpicture}
-      \end{adjustbox}
+
+        \def\black{black}
+        \def\green{green!60!black}
+        \def\red{red}
+        \def\upperoffset{20pt}
+        \def\loweroffset{50pt}
+
+        \onslide<1->{
+        \node[
+          canvas,
+          label={[]above:(1a)},
+        ] (1a) at (c1) {
+          \begin{tikzpicture}[node distance=3pt]
+            \node[
+                rect=\black,
+              ] (r1) at (0,0) {\vphantom{bg}black};
+            \node[
+                rect=\black,
+                below = of r1,
+              ] (r2) {\vphantom{bg}black};
+          \end{tikzpicture}
+        };
+        }
+
+        \onslide<3->{
+        \node[
+          canvas,
+          label={[]above:(1b)},
+          right = of 1a,
+        ] (1b) {
+          \begin{tikzpicture}[node distance=3pt]
+            \node[
+                rect=\red,
+              ] (r1) at (0,0) {\vphantom{bg}red};
+            \node[
+                rect=\black,
+                below = of r1,
+              ] (r2) {\vphantom{bg}black};
+          \end{tikzpicture}
+        } edge (1a);
+        }
+
+        \onslide<5->{
+        \node[
+          canvas,
+          label={[]above:(1c)},
+          right = of 1b,
+        ] (1c) {
+          \begin{tikzpicture}[node distance=3pt]
+            \node[
+                rect=\red,
+              ] (r1) at (0,0) {\vphantom{bg}red};
+            \node[
+                rect=\green,
+                below = of r1,
+              ] (r2) {\vphantom{bg}green};
+          \end{tikzpicture}
+        } edge (1b);
+        }
+
+        \onslide<7->{
+        \node[
+          canvas,
+          label={[]above:(1d)},
+          right = of 1c,
+        ] (1d) {
+          \begin{tikzpicture}[node distance=3pt]
+            \node[
+                rect=\black,
+              ] (r1) at (0,0) {\vphantom{bg}black};
+            \node[
+                rect=\green,
+                below = of r1,
+              ] (r2) {\vphantom{bg}green};
+          \end{tikzpicture}
+        } edge (1c);
+        }
+
+        \onslide<9->{
+        \node[
+          canvas,
+          label={[]above:(1e)},
+          right = of 1d,
+        ] (1e) {
+          \begin{tikzpicture}[node distance=3pt]
+            \node[
+                rect=\red,
+              ] (r1) at (0,0) {\vphantom{bg}red};
+            \node[
+                rect=\green,
+                below = of r1,
+              ] (r2) {\vphantom{bg}green};
+          \end{tikzpicture}
+        } edge (1d);
+        }
+
+        \coordinate (d1s) at ($(1a.north)!0.5!(1b.north)+(0,+\upperoffset)$);
+        \coordinate (d1e) at ($(1a.north)!0.5!(1b.north)+(0,-\loweroffset)$);
+
+        \coordinate (d2s) at ($(1b.north)!0.5!(1c.north)+(0,+\upperoffset)$);
+        \coordinate (d2e) at ($(1b.north)!0.5!(1c.north)+(0,-\loweroffset)$);
+
+        \coordinate (d3s) at ($(1c.north)!0.5!(1d.north)+(0,+\upperoffset)$);
+        \coordinate (d3e) at ($(1c.north)!0.5!(1d.north)+(0,-\loweroffset)$);
+
+        \coordinate (d4s) at ($(1d.north)!0.5!(1e.north)+(0,+\upperoffset)$);
+        \coordinate (d4e) at ($(1d.north)!0.5!(1e.north)+(0,-\loweroffset)$);
+
+        \onslide<2->{
+        \draw[stepline] (d1s) -- (d1e);
+        \draw (1b.north)+(-0.2cm,+\upperoffset) edge ["A set",optrans] ($(1a.north)+(0,+\upperoffset)$);
+        }
+
+        \onslide<4->{
+        \draw (1c.north)+(-0.2cm,+\upperoffset) edge ["B set",optrans] ($(1b.north)+(0,+\upperoffset)$);
+        \draw[stepline] (d2s) -- (d2e);
+        }
+
+        \onslide<6->{
+        \draw (1d.north)+(-0.2cm,+\upperoffset) edge ["A undo",optrans] ($(1c.north)+(0,+\upperoffset)$);
+        \draw[stepline] (d3s) -- (d3e);
+        }
+
+        \onslide<8->{
+        \draw (1e.north)+(-0.2cm,+\upperoffset) edge ["A redo",optrans] ($(1d.north)+(0,+\upperoffset)$);
+        \draw[stepline] (d4s) -- (d4e);
+        }
+
+      \end{tikzpicture}
+    \end{adjustbox}
+    \caption{Canvas with two replicated registers.}\label{fig:intro-two-registers-front}
   \end{figure}
 \end{frame}
 
-\setbeamercovered{transparent=35}
-\begin{frame}[fragile]{Illustration}
+\begin{frame}[fragile]
   \begin{figure}
     \begin{adjustbox}{max totalsize={\textwidth}{0.75\textheight},center}
-\begin{tikzpicture}[node distance=18pt]
-  \tikzset{
-    register/.style={
-      anchor=west,
-      xshift=-30pt,
-    },
-  }
-  \def\dist{18pt}
+      \begin{tikzpicture}[node distance=0.23cm]
+        \coordinate (c1) at (0,0);
 
-  \only<1>{
-    \node[register] (vals) at (0, 2) {\textbf{Register: }\stack{
-      \colorbox{black}{\phantom{R}}
-    }};
-  }
-  \only<2>{
-    \node[register] (vals) at (0, 2) {\textbf{Register: }\stack{
-      \colorbox{red}{\phantom{R}}
-    }};
-  }
-  \only<3>{
-    \node[register] (vals) at (0, 2) {\textbf{Register: }\stack{
-      \colorbox{green}{\phantom{R}}
-    }};
-  }
-  \only<4>{
-    \node[register] (vals) at (0, 2) {\textbf{Register: }\stack{
-      \colorbox{red}{\phantom{R}}
-    }};
-  }
-  \only<5->{
-    \node[register] (vals) at (0, 2) {\textbf{Register: }\stack{
-      \colorbox{black}{\phantom{R}}
-    }};
-  }
+        \tikzset{
+          canvas/.style={
+            rectangle,
+            draw,
+            anchor = west,
+            inner sep = 4pt,
+          },
+          rect/.style={
+            rectangle,
+            minimum width = 1.2cm, 
+            minimum height = 0.5cm,
+            inner sep = 0.1cm,
+            text = white,
+            fill = #1,
+          },
+          optrans/.style={
+            <-,bend right=90,>={Stealth[round]},
+            swap,
+            black!70,
+          },
+          casediv/.style={
+            black!70,
+          },
+        }
 
-  % nodes and edges
-  \visible<1->{
-    \node[op] (a1) at (0, 0) {\setop{1}{A}{\colorbox{black}{\phantom{R}}}};
-  }
+        \def\black{black}
+        \def\green{green!60!black}
+        \def\red{red}
+        \def\upperoffset{20pt}
+        \def\loweroffset{50pt}
 
-  \visible<2->{
-    \node[op,right=of a1] (a2) {\setop{2}{A}{\colorbox{red}{\phantom{R}}}} edge [pred] (a1);
-  }
+        \coordinate (d1s) at ($(1a.north)!0.5!(1b.north)+(0,+\upperoffset)$);
+        \coordinate (d1e) at ($(1a.north)!0.5!(1b.north)+(0,-\loweroffset)$);
 
-  \visible<3->{
-    \node[op,right=of a2] (b3) {\setop{3}{B}{\colorbox{green}{\phantom{R}}}} edge [pred] (a2);
-  }
+        \coordinate (d2s) at ($(1b.north)!0.5!(1c.north)+(0,+\upperoffset)$);
+        \coordinate (d2e) at ($(1b.north)!0.5!(1c.north)+(0,-\loweroffset)$);
 
-  \visible<4>{
-    \node[op,right=of b3] (a4_global) {\undop{4}{A}{3}{B}} edge [pred] (b3) edge [anchorref,bend left,label={[anchor=north,font=\footnotesize]below:global undo}] (b3);
-  }
+        \coordinate (d3s) at ($(1c.north)!0.5!(1d.north)+(0,+\upperoffset)$);
+        \coordinate (d3e) at ($(1c.north)!0.5!(1d.north)+(0,-\loweroffset)$);
 
-  \visible<5->{
-    \node[op,right=of b3] (a4_local) {\undop{4}{A}{2}{A}} edge [pred] (b3) edge [anchorref,bend right=50,label={[font=\footnotesize]local undo}] (a2);
-  }
+        \coordinate (d4s) at ($(1d.north)!0.5!(1e.north)+(0,+\upperoffset)$);
+        \coordinate (d4e) at ($(1d.north)!0.5!(1e.north)+(0,-\loweroffset)$);
 
-  \visible<6->{
-  \node [fill=white,anchor=center,draw,rounded corners] at (3.6,-1.1) {
-    \visible<6->{
-      \includegraphics[height=30px]{figures/gsheets.png}
-    }
-    \visible<7->{
-      \includegraphics[height=30px]{figures/gslides.png}
-    }
-    \visible<8->{
-      \includegraphics[height=30px]{figures/figma.png}
-    }
-    \visible<9->{
-      \includegraphics[height=30px]{figures/powerpoint.png}
-    }
-    \visible<10->{
-      \includegraphics[height=30px]{figures/excel.png}
-    }
-  };
-  }
+        \onslide<2->{
+        \draw (1b.north)+(-0.2cm,+\upperoffset) edge ["A set",optrans] ($(1a.north)+(0,+\upperoffset)$);
+        \draw[stepline] (d1s) -- (d1e);
+        }
 
-\end{tikzpicture}
-\end{adjustbox}
-\caption{
-  Local vs global undo.
-}\label{fig:local-vs-global-undo}
-\end{figure}
+        \onslide<4->{
+        \draw (1c.north)+(-0.2cm,+\upperoffset) edge ["B set",optrans] ($(1b.north)+(0,+\upperoffset)$);
+        \draw[stepline] (d2s) -- (d2e);
+        }
+
+        \onslide<6->{
+        \draw (1d.north)+(-0.2cm,+\upperoffset) edge ["A undo",optrans] ($(1c.north)+(0,+\upperoffset)$);
+        \draw[stepline] (d3s) -- (d3e);
+        }
+
+        \onslide<8->{
+        \draw (1e.north)+(-0.2cm,+\upperoffset) edge ["A redo",optrans] ($(1d.north)+(0,+\upperoffset)$);
+        \draw[stepline] (d4s) -- (d4e);
+        }
+
+        %%%%
+        
+        \onslide<1->{
+        \node[
+          canvas,
+          label={[]above:(2a)},
+        ] (2a) at (c1) {
+          \begin{tikzpicture}[node distance=3pt]
+            \node[
+                rect=\black,
+              ] (r1) at (0,0) {\vphantom{bg}black};
+          \end{tikzpicture}
+        };
+        }
+
+        \onslide<3->{
+        \node[
+          canvas,
+          label={[]above:(2b)},
+          right = of 2a,
+        ] (2b) {
+          \begin{tikzpicture}[node distance=3pt]
+            \node[
+                rect=\red,
+              ] (r1) at (0,0) {\vphantom{bg}red};
+          \end{tikzpicture}
+        } edge (2a);
+        }
+
+        \onslide<5->{
+        \node[
+          canvas,
+          label={[]above:(2c)},
+          right = of 2b,
+        ] (2c) {
+          \begin{tikzpicture}[node distance=3pt]
+            \node[
+                rect=\green,
+              ] (r1) at (0,0) {\vphantom{bg}green};
+          \end{tikzpicture}
+        } edge (2b);
+        }
+
+        %%%
+
+        \onslide<7->{
+        \node[
+          canvas,
+          label={[]above:(2d1)},
+          right = of 2c,
+        ] (2d1) {
+          \begin{tikzpicture}[node distance=3pt]
+            \node[
+                rect=\black,
+              ] (r1) at (0,0) {\vphantom{bg}black};
+          \end{tikzpicture}
+        } edge (2c);
+        }
+
+        \onslide<9->{
+        \node[
+          canvas,
+          label={[]above:(2e2)},
+          right = of 2d1,
+        ] (2d1e2) {
+          \begin{tikzpicture}[node distance=3pt]
+            \node[
+                rect=\green,
+              ] (r1) at (0,0) {\vphantom{bg}green};
+          \end{tikzpicture}
+        } edge (2d1);
+        }
+
+        \only<10->{
+        \node [fill=white,anchor=center,draw,rounded corners] at (4.2,-2.0) {
+            \includegraphics[height=30px]{figures/gsheets.png}
+            \includegraphics[height=30px]{figures/gslides.png}
+            \includegraphics[height=30px]{figures/figma.png}
+            \includegraphics[height=30px]{figures/powerpoint.png}
+            \includegraphics[height=30px]{figures/excel.png}
+            \only<10>{
+              \includegraphics[height=30px]{figures/miro.png}%
+            }
+            \only<11>{
+              \includegraphics[height=30px]{figures/miro_crossed_out.png}%
+            }
+        };
+        }
+
+      \end{tikzpicture}
+    \end{adjustbox}
+    \caption{Canvas with one replicated register.}\label{fig:intro-one-register-back}
+  \end{figure}
 \end{frame}
-\setbeamercovered{invisible}
+
+\subsection{Background}
 
 \begin{frame}[fragile]{Why Replicated Registers, if Automerge is a JSON CRDT?}
   \begin{figure}
@@ -318,13 +528,7 @@
   \end{figure}
 \end{frame}
 
-\begin{frame}{How are Replicated Registers different from, e.g., a Counter CRDT?}
-  \begin{itemize}[<+->]
-    \item every state update message contains the whole state
-    \item what is the inverse of a set op?
-    \item how to redo?
-  \end{itemize}
-\end{frame}
+\subsection{Edge Cases}
 
 % Undo has to restore conflicts if it undoes a merge operation.
 \setbeamercovered{transparent=35}
@@ -371,7 +575,7 @@
   }
 
   \visible<4->{
-  \node[op,above right=\dist of a3] (a4) {\undop{4}{A}{3}{A}} edge [pred] (a3) edge [anchorref,bend right=30] (a3);
+    \node[op,above right=\dist of a3] (a4) {\undop{4}{A}{3}{A}} edge [pred] (a3) edge [anchorref,bend right=30] (a3);
   }
 
   % invisible
@@ -380,13 +584,55 @@
 \end{adjustbox}
 \caption{
   Undo of a merge op.
-}\label{fig:edge-case-1}
+}\label{fig:undo-merge-op}
 \end{figure}
 \end{frame}
 \setbeamercovered{invisible}
 
 \setbeamercovered{transparent=35}
 \begin{frame}[fragile]{Edge Cases to Consider (2)}
+  \begin{figure}
+    \begin{adjustbox}{max totalsize={\textwidth}{0.75\textheight},center}
+\begin{tikzpicture}[node distance=60pt]
+  \tikzset{
+    register/.style={
+      anchor=west,
+      xshift=-90pt,
+    },
+  }
+  \def\dist{18pt}
+
+  \only<1->{
+    \node[register] (vals) at (0, 2) {\textbf{Register: }\stack{
+          \colorbox{orange}{\phantom{R}}, \colorbox{green}{\phantom{R}}, \colorbox{red}{\phantom{R}}
+    }};
+  }
+
+  % nodes and edges
+  \node[op] (a1) at (0, 0) {\setop{1}{A}{\colorbox{black}{\phantom{R}}}};
+
+  \node[op,above right=\dist of a1] (a2) {\setop{2}{A}{\colorbox{red}{\phantom{R}}}} edge [pred] (a1);
+  \node[op,below right=\dist of a1] (b2) {\setop{2}{B}{\colorbox{green}{\phantom{R}}}} edge [pred] (a1);
+
+  \node[op,below right=\dist of a2] (a3) {\setop{3}{A}{\colorbox{blue}{\phantom{R}}}} edge [pred] (a2) edge [pred] (b2);
+
+  \node[op,above right=\dist of a3] (a4) {\undop{4}{A}{3}{A}} edge [pred] (a3) edge [anchorref,bend right=30] (a3);
+
+  \node[op,below right=\dist of a3] (b4) {\setop{4}{B}{\colorbox{orange}{\phantom{R}}}} edge [pred] (a3);
+
+  % invisible
+  \node[inv,below right=\dist of a4] (b5) {\phantom{\redop{5}{B}{4}{B}}};
+\end{tikzpicture}
+\end{adjustbox}
+\caption{
+  Concurrent undo and set op.
+}\label{fig:concurrent-undo-set}
+\end{figure}
+\end{frame}
+\setbeamercovered{invisible}
+
+\setbeamercovered{transparent=35}
+\begin{frame}[fragile]{Edge Cases to Consider (3)}
   \begin{figure}
     \begin{adjustbox}{max totalsize={\textwidth}{0.75\textheight},center}
 \begin{tikzpicture}[node distance=60pt]
@@ -422,13 +668,13 @@
 \end{adjustbox}
 \caption{
   Concurrent undo ops.
-}\label{fig:edge-case-2}
+}\label{fig:concurrent-undos}
 \end{figure}
 \end{frame}
 \setbeamercovered{invisible}
 
 \setbeamercovered{transparent=35}
-\begin{frame}[fragile]{Edge Cases to Consider (3)}
+\begin{frame}[fragile]{Edge Cases to Consider (4)}
   \begin{figure}
     \begin{adjustbox}{max totalsize={\textwidth}{0.75\textheight},center}
 \begin{tikzpicture}[node distance=60pt]
@@ -468,47 +714,7 @@
 \end{frame}
 \setbeamercovered{invisible}
 
-\setbeamercovered{transparent=35}
-\begin{frame}[fragile]{Edge Cases to Consider (4)}
-  \begin{figure}
-    \begin{adjustbox}{max totalsize={\textwidth}{0.75\textheight},center}
-\begin{tikzpicture}[node distance=60pt]
-  \tikzset{
-    register/.style={
-      anchor=west,
-      xshift=-90pt,
-    },
-  }
-  \def\dist{18pt}
-
-  \only<1->{
-    \node[register] (vals) at (0, 2) {\textbf{Register: }\stack{
-          \colorbox{orange}{\phantom{R}}, \colorbox{green}{\phantom{R}}, \colorbox{red}{\phantom{R}}
-    }};
-  }
-
-  % nodes and edges
-  \node[op] (a1) at (0, 0) {\setop{1}{A}{\colorbox{black}{\phantom{R}}}};
-
-  \node[op,above right=\dist of a1] (a2) {\setop{2}{A}{\colorbox{red}{\phantom{R}}}} edge [pred] (a1);
-  \node[op,below right=\dist of a1] (b2) {\setop{2}{B}{\colorbox{green}{\phantom{R}}}} edge [pred] (a1);
-
-  \node[op,below right=\dist of a2] (a3) {\setop{3}{A}{\colorbox{blue}{\phantom{R}}}} edge [pred] (a2) edge [pred] (b2);
-
-  \node[op,above right=\dist of a3] (a4) {\undop{4}{A}{3}{A}} edge [pred] (a3) edge [anchorref,bend right=30] (a3);
-
-  \node[op,below right=\dist of a3] (b4) {\setop{4}{B}{\colorbox{orange}{\phantom{R}}}} edge [pred] (a3);
-
-  % invisible
-  \node[inv,below right=\dist of a4] (b5) {\phantom{\redop{5}{B}{4}{B}}};
-\end{tikzpicture}
-\end{adjustbox}
-\caption{
-  Concurrent undo and set op.
-}\label{fig:edge-case-4}
-\end{figure}
-\end{frame}
-\setbeamercovered{invisible}
+\subsection{Evaluation}
 
 \begin{frame}{Constant Runtime for Common Editing Scenarios}
   \begin{figure}
@@ -678,7 +884,7 @@
 
 \section*{Backup Slides}
 
-\subsection{Semantics with Multiple Registers}
+\subsection{Extended Semantics}
 
 \begin{frame}[fragile]
   \begin{figure}
@@ -1229,6 +1435,77 @@
   \end{figure}
 \end{frame}
 
+\subsection{Global vs Local Undo}
+
+\setbeamercovered{transparent=35}
+\begin{frame}[fragile]{Illustration}
+  \begin{figure}
+    \begin{adjustbox}{max totalsize={\textwidth}{0.75\textheight},center}
+\begin{tikzpicture}[node distance=18pt]
+  \tikzset{
+    register/.style={
+      anchor=west,
+      xshift=-30pt,
+    },
+  }
+  \def\dist{18pt}
+
+  \only<1>{
+    \node[register] (vals) at (0, 2) {\textbf{Register: }\stack{
+      \colorbox{black}{\phantom{R}}
+    }};
+  }
+  \only<2>{
+    \node[register] (vals) at (0, 2) {\textbf{Register: }\stack{
+      \colorbox{red}{\phantom{R}}
+    }};
+  }
+  \only<3>{
+    \node[register] (vals) at (0, 2) {\textbf{Register: }\stack{
+      \colorbox{green}{\phantom{R}}
+    }};
+  }
+  \only<4>{
+    \node[register] (vals) at (0, 2) {\textbf{Register: }\stack{
+      \colorbox{red}{\phantom{R}}
+    }};
+  }
+  \only<5->{
+    \node[register] (vals) at (0, 2) {\textbf{Register: }\stack{
+      \colorbox{black}{\phantom{R}}
+    }};
+  }
+
+  % nodes and edges
+  \visible<1->{
+    \node[op] (a1) at (0, 0) {\setop{1}{A}{\colorbox{black}{\phantom{R}}}};
+  }
+
+  \visible<2->{
+    \node[op,right=of a1] (a2) {\setop{2}{A}{\colorbox{red}{\phantom{R}}}} edge [pred] (a1);
+  }
+
+  \visible<3->{
+    \node[op,right=of a2] (b3) {\setop{3}{B}{\colorbox{green}{\phantom{R}}}} edge [pred] (a2);
+  }
+
+  \visible<4>{
+    \node[op,right=of b3] (a4_global) {\undop{4}{A}{3}{B}} edge [pred] (b3) edge [anchorref,bend left,label={[anchor=north,font=\footnotesize]below:global undo}] (b3);
+  }
+
+  \visible<5->{
+    \node[op,right=of b3] (a4_local) {\undop{4}{A}{2}{A}} edge [pred] (b3) edge [anchorref,bend right=50,label={[font=\footnotesize]local undo}] (a2);
+  }
+
+\end{tikzpicture}
+\end{adjustbox}
+\caption{
+  Local vs global undo.
+}\label{fig:local-vs-global-undo}
+\end{figure}
+\end{frame}
+\setbeamercovered{invisible}
+
 \subsection{Algorithm}
 
 \setbeamercovered{transparent=35}
@@ -1360,7 +1637,7 @@
 \end{frame}
 \setbeamercovered{invisible}
 
-\subsection{Evaluation}
+\subsection{Extended Evaluation}
 
 \setbeamercovered{invisible}
 \begin{frame}[fragile]{Degenerate Editing Scenario}
@@ -1453,6 +1730,39 @@
             \\
     \end{tabular}
   \end{table}
+\end{frame}
+
+\begin{frame}[fragile]{Undo Kinds in a Collaborative Setting}
+  \begin{figure}
+    \center
+    \begin{adjustbox}{max totalsize={\textwidth}{0.75\textheight},center}
+        \tikzset{
+          treenode/.style = {shape=rectangle, rounded corners,
+                             draw, align=center,},
+          root/.style     = {treenode},
+          dummy/.style    = {circle,draw}
+        }
+        \begin{tikzpicture}
+          [
+            grow                    = right,
+            sibling distance        = 6em,
+            level distance          = 10em,
+            edge from parent/.style = {draw, -latex},
+            every node/.style       = {font=\footnotesize},
+            sloped
+          ]
+          \node [root,dummy] {}
+            child { node [treenode, align=center] {selective undo}
+              edge from parent node [below] {any order} }
+            child { node [treenode] {undo}
+              child { node [treenode] {global undo}
+                edge from parent node [below] {all ops} }
+              child { node [treenode] {local undo}
+                edge from parent node [above, align=center] {own ops} }
+              edge from parent node [above, align=center] {rev. chron. order} };
+        \end{tikzpicture}
+      \end{adjustbox}
+  \end{figure}
 \end{frame}
 
 \end{document}
