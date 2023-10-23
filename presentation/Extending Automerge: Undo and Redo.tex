@@ -446,9 +446,9 @@
         \onslide<7->{
         \node[
           canvas,
-          label={[]above:(2d1)},
+          label={[]above:(2d)},
           right = of 2c,
-        ] (2d1) {
+        ] (2d) {
           \begin{tikzpicture}[node distance=3pt]
             \node[
                 rect=\black,
@@ -460,15 +460,15 @@
         \onslide<9->{
         \node[
           canvas,
-          label={[]above:(2e2)},
-          right = of 2d1,
-        ] (2d1e2) {
+          label={[]above:(2e)},
+          right = of 2d,
+        ] (2e) {
           \begin{tikzpicture}[node distance=3pt]
             \node[
                 rect=\green,
               ] (r1) at (0,0) {\vphantom{bg}green};
           \end{tikzpicture}
-        } edge (2d1);
+        } edge (2d);
         }
 
         \only<10->{
