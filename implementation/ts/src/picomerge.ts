@@ -170,7 +170,7 @@ const History = {
     const currentPreds = () => new Set(heads);
 
     const isLocalOp = (op: Op<V>) => isActorsOp(op, actorId);
-    const isRemoteOp = (op: Op<V>) => !isLocalOp(op);
+    const _isRemoteOp = (op: Op<V>) => !isLocalOp(op);
     const isActorsOp = (op: Op<V>, actorId: ActorId) =>
       OpId.actor(op.opId) === actorId;
 
@@ -232,7 +232,7 @@ const History = {
           : undefined;
       const isRedo = isRedoOp(op, anchorOp);
       const isUndo = isUndoOp(op, anchorOp);
-      const isTerminal = isTerminalOp(op);
+      const _isTerminal = isTerminalOp(op);
       const isSet = isSetOp(op);
       const isDelete = isDeleteOp(op);
 
@@ -399,7 +399,7 @@ const History = {
       return op;
     };
 
-    const redo = () => {
+    const redo = (): RestoreOp | undefined => {
       if (redoStack.length === 0) return;
       const anchor = redoStack.pop()!;
       const op: RestoreOp = {
@@ -432,7 +432,7 @@ export const Picomerge = {
     // the maximum operation counter seen so far expressed in a clock
     const clock = Clock.create(actorId);
 
-    const logger = (string: string) => {
+    const _logger = (string: string) => {
       console.log(`[Actor '${actorId}'] ${string}`);
     };
 
