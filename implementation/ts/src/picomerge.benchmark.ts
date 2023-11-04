@@ -130,6 +130,22 @@ const altUndoRedoSeqRedoResults = lengths.map((length) => {
   return [length, redo] as const;
 });
 
+const altUndoRedoSeqRedoResultsWithCacheOpt = lengths.map((length) => {
+  const redo: BenchmarkSuite = {
+    name: `one redo after an undo/redo sequence of length ${length} (with cache opt)`,
+    beforeEach: () => {
+      instance = generateUndoRedoSequence("A", [1, 2], length - 1, true)[0];
+      instance.undo();
+    },
+    benchmarks: {
+      ["redo"]: () => {
+        instance.redo();
+      },
+    },
+  };
+  return [length, redo] as const;
+});
+
 lengths = new Array(50).fill(null).map((_, i) => i + 1);
 
 const undoRedoSeqUndoResults = lengths.map((length) => {
@@ -210,3 +226,8 @@ driveBenchmark("undoRedoSeqUndo", "undo", undoRedoSeqUndoResults);
 driveBenchmark("undoRedoSeqRedo", "redo", undoRedoSeqRedoResults);
 driveBenchmark("altUndoRedoSeqUndo", "undo", altUndoRedoSeqUndoResults);
 driveBenchmark("altUndoRedoSeqRedo", "redo", altUndoRedoSeqRedoResults);
+driveBenchmark(
+  "altUndoRedoSeqRedoWithCacheOpt",
+  "redo",
+  altUndoRedoSeqRedoResultsWithCacheOpt,
+);

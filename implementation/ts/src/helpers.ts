@@ -6,9 +6,10 @@ import { Op, Picomerge } from "./picomerge";
 export const createLeftAndRight = <V>(
   leftActorId = "left",
   rightActorId = "right",
+  useCache = false,
 ) => {
-  const left = Picomerge.create<V>(leftActorId);
-  const right = Picomerge.create<V>(rightActorId);
+  const left = Picomerge.create<V>(leftActorId, useCache);
+  const right = Picomerge.create<V>(rightActorId, useCache);
   return { left, right };
 };
 
@@ -20,8 +21,9 @@ export const generateUndoRedoSequence = <V>(
   actorId: string,
   initValues: V[],
   length: number,
+  useCache = false,
 ): [Picomerge<V>, Op<V>[]] => {
-  const picomerge = Picomerge.create<V>(actorId);
+  const picomerge = Picomerge.create<V>(actorId, useCache);
   for (const initValue of initValues) picomerge.set(initValue);
   return [
     picomerge,
@@ -39,8 +41,9 @@ export const generateUndoRedoSequence = <V>(
 export const generateSetSequence = (
   actorId: string,
   length: number,
+  useCache = false,
 ): [Picomerge<number>, Op<number>[]] => {
-  const picomerge = Picomerge.create<number>(actorId);
+  const picomerge = Picomerge.create<number>(actorId, useCache);
   return [
     picomerge,
     Array.from({ length }, (_, i) => i).map((i) => picomerge.set(i)),

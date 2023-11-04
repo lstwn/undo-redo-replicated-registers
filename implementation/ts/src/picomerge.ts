@@ -34,6 +34,31 @@ type MvRegister<V> = {
  * of kind `restore`.
  */
 type OpIdTrace = StringifiedOpId[];
+const OpIdTrace = {
+  compare: (a: OpIdTrace, b: OpIdTrace): -1 | 0 | 1 => {
+    for (const [aOpId, bOpId] of zip(a, b)) {
+      const comparison = OpId.compare(
+        OpId.fromString(aOpId),
+        OpId.fromString(bOpId),
+      );
+      if (comparison !== 0) return comparison;
+    }
+    // For the caching optimiztion to work we have to return equality here
+    // because the cached `OpIdTraces` are pruned up to their respective `RestoreOp`
+    // and deeper entries are truncated.
+    // Yet, this works because the cached values corresponding to the `RestoreOp` are
+    // already sorted correctly.
+    return 0;
+    // Technically, the following behavior is correct if we were to compare non-pruned
+    // `OpIdTraces` at all times.
+    // By construction of the `OpIdTraces` any two valid `OpIdTraces` differ before
+    // hitting their last zipped elements.
+    // throw new Error(
+    //   "Impossible: Each path from a head to a terminal op must be unique",
+    // );
+  },
+};
+
 /**
  * The resolution depth is the number of times an op of kind `restore` has been
  * encountered while resolving a head.
@@ -98,6 +123,14 @@ type RestoreOp = OpBase & {
   anchor: OpId;
 };
 
+/**
+ * This cache can be used to store the resolved values for a `RestoreOp`
+ * to trade space for computation time.
+ * It stores the sorted values produced by the `RestoreOp` identified
+ * by the key of the map.
+ */
+type Cache<V> = Map<StringifiedOpId, TerminalOp<V>[]>;
+
 export const OpId = {
   create: (ctr: number, actorId: ActorId): OpId => [ctr, actorId],
   actor: (opId: OpId): ActorId => opId[1],
@@ -148,8 +181,14 @@ const Clock = {
   },
 };
 
+type History<V> = ReturnType<typeof History.create<V>>;
 const History = {
-  create: <V>(actorId: string, clock: Clock, logger?: (s: string) => void) => {
+  create: <V>(
+    actorId: string,
+    clock: Clock,
+    useCache = false,
+    logger?: (s: string) => void,
+  ) => {
     // operations that are not yet causally ready wait in the lobby, that is,
     // all unapplied and causally not-yet-ready operations wait until their
     // causal dependencies (transitive predecessors) are applied
@@ -161,6 +200,7 @@ const History = {
     // for quick lookup of the (global) last op,
     // useful for reverting the last operation from _any_ actor
     let lastOp: Op<V> | null = null;
+    const cache: Cache<V> = new Map();
 
     // local changes of the actor for undo/redo
     const undoStack: SetOp<V>[] = [];
@@ -277,6 +317,7 @@ const History = {
       // 2. sorted by their opIdTrace
       const terminalHeads = (() => {
         const resolveToTerminalOp = (
+          head: Op<V>,
           queue: [StringifiedOpId, ResolutionMetadata][],
         ): [TerminalOp<V>, ResolutionMetadata][] => {
           const result: [TerminalOp<V>, ResolutionMetadata][] = [];
@@ -300,13 +341,38 @@ const History = {
               // onto the queue
               case OpKind.restore: {
                 const _restoreActor = OpId.actor(opId);
-                const anchorOp = appliedOps.get(OpId.toString(nextOp.anchor));
+                const anchorOpIdStringified = OpId.toString(nextOp.anchor);
+                const anchorOp = appliedOps.get(anchorOpIdStringified);
                 if (!anchorOp)
                   throw new Error(
                     "Impossible: Anchor operation not found in applied ops, causally ready invariant violated",
                   );
+                const toResolve = (() => {
+                  if (!useCache) return [...anchorOp.preds];
+                  const [cached, toResolve] = partition(
+                    anchorOp.preds,
+                    (pred) => (cache.get(pred) ? true : false),
+                  );
+                  cached.forEach((cachedPred) => {
+                    const hit = cache.get(cachedPred)!;
+                    result.push(
+                      ...hit.map(
+                        // the cached, _sorted_ order should be preserved as JS built-in sorting is stable
+                        (v) =>
+                          [
+                            v,
+                            {
+                              opIdTrace: [...newMetadata.opIdTrace, cachedPred],
+                              resolutionDepth: newMetadata.resolutionDepth + 1,
+                            },
+                          ] as [TerminalOp<V>, ResolutionMetadata],
+                      ),
+                    );
+                  });
+                  return toResolve;
+                })();
                 queue.push(
-                  ...[...anchorOp.preds].map(
+                  ...toResolve.map(
                     (pred) =>
                       [pred, newMetadata] as [
                         StringifiedOpId,
@@ -318,41 +384,44 @@ const History = {
               }
             }
           }
+          if (useCache && head.kind === OpKind.restore) {
+            cache.set(
+              OpId.toString(head.opId),
+              result
+                .sort(
+                  (
+                    [_aOp, { opIdTrace: aOpIdTrace }],
+                    [_bOp, { opIdTrace: bOpIdTrace }],
+                  ) => OpIdTrace.compare(bOpIdTrace, aOpIdTrace),
+                )
+                .map(([op, _meta]) => op),
+            );
+          }
           return result;
         };
 
-        const terminalHeads = // 1. prepare the heads for the resolution
-          (
-            [...heads].map((head) => [
+        const terminalHeads = [...heads]
+          // 1. resolve the heads to terminal ops
+          .flatMap((head) => {
+            // in case the op is not yet known it must be the op
+            // that is currently processed
+            const headOp = appliedOps.get(head) ?? op;
+            return resolveToTerminalOp(headOp, [
               [head, { opIdTrace: [], resolutionDepth: 0 }],
-            ]) as [[StringifiedOpId, ResolutionMetadata]][]
-          )
-            // 2. resolve the heads to terminal ops
-            .flatMap(resolveToTerminalOp)
-            // 3. sort the terminal ops by their op id trace
-            .sort(
-              (
-                [_aOp, { opIdTrace: aOpIdTrace }],
-                [_bOp, { opIdTrace: bOpIdTrace }],
-              ) => {
-                for (const [a, b] of zip(aOpIdTrace, bOpIdTrace)) {
-                  const comparison = OpId.compare(
-                    // b - a because we want the highest opId first
-                    OpId.fromString(b),
-                    OpId.fromString(a),
-                  );
-                  if (comparison !== 0) return comparison;
-                }
-                throw new Error(
-                  "Impossible: Each path from a head to a terminal op must be unique",
-                );
-              },
-            );
+            ] as [StringifiedOpId, ResolutionMetadata][]);
+          })
+          // 2. sort the terminal ops by their op id trace
+          .sort(
+            (
+              [_aOp, { opIdTrace: aOpIdTrace }],
+              [_bOp, { opIdTrace: bOpIdTrace }],
+            ) => OpIdTrace.compare(bOpIdTrace, aOpIdTrace),
+          );
 
         return terminalHeads;
       })();
 
-      // apply the effect of the op (or rather the effect of the current heads)
+      // apply the effect of the current heads
       register.values = terminalHeads.reduce((acc: V[], [head, _metadata]) => {
         // only set ops with a value produce a value
         if (head.value !== undefined) acc.push(head.value);
@@ -428,7 +497,7 @@ const History = {
 
 export type Picomerge<V> = ReturnType<typeof Picomerge.create<V>>;
 export const Picomerge = {
-  create: <V>(actorId: string) => {
+  create: <V>(actorId: string, useCache = false) => {
     // the maximum operation counter seen so far expressed in a clock
     const clock = Clock.create(actorId);
 
@@ -437,7 +506,7 @@ export const Picomerge = {
     };
 
     // the history of operations of the register
-    const history = History.create<V>(actorId, clock);
+    const history = History.create<V>(actorId, clock, useCache);
     // the register with its current values
     const register: MvRegister<V> = { values: [], terminalHeads: [] };
 

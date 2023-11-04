@@ -152,54 +152,111 @@ describe("Picomerge: undo and redo", () => {
       expect(Math.max(...redoResolutionDepths)).toEqual(3);
     });
 
-    test("linear operation history: undo and redo alternating sequence (produces high resolution depth)", () => {
-      const a = Picomerge.create<number>("A");
+    describe("resolution depth", () => {
+      describe("without cache optimization, expecting linear resolution depths", () => {
+        test("linear operation history: undo and redo alternating sequence", () => {
+          const a = Picomerge.create<number>("A");
 
-      a.set(0);
-      a.set(1);
-      expect(a.get()).toEqual([1]);
+          a.set(0);
+          a.set(1);
+          expect(a.get()).toEqual([1]);
 
-      const length = 10;
+          const length = 10;
 
-      Array.from({ length }).map((_, i) => {
-        const currentSeqLength = i + 1;
+          Array.from({ length }).map((_, i) => {
+            const currentSeqLength = i + 1;
 
-        expect(a.undo()).toBeDefined();
-        expect(a.get()).toEqual([0]);
-        expect(
-          a.terminalHeads().map(([_op, meta]) => meta.resolutionDepth),
-        ).toEqual([2]); // undo has constant resolution depth
+            expect(a.undo()).toBeDefined();
+            expect(a.get()).toEqual([0]);
+            expect(
+              a.terminalHeads().map(([_op, meta]) => meta.resolutionDepth),
+            ).toEqual([2]); // undo has constant resolution depth
 
-        expect(a.redo()).toBeDefined();
-        expect(a.get()).toEqual([1]);
-        expect(
-          a.terminalHeads().map(([_op, meta]) => meta.resolutionDepth),
-        ).toEqual([currentSeqLength + 1]); // redo is not constant, but linearly increasing
+            expect(a.redo()).toBeDefined();
+            expect(a.get()).toEqual([1]);
+            expect(
+              a.terminalHeads().map(([_op, meta]) => meta.resolutionDepth),
+            ).toEqual([currentSeqLength + 1]); // redo is not constant, but linearly increasing
+          });
+        });
+
+        test("linear operation history: set and undo alternating sequence", () => {
+          const a = Picomerge.create<number>("A");
+
+          const initValue = 0;
+          a.set(initValue);
+
+          const length = 10;
+
+          Array.from({ length }).map((_, i) => {
+            const currentSeqLength = i + 1;
+
+            a.set(i);
+            expect(a.get()).toEqual([i]);
+            expect(
+              a.terminalHeads().map(([_op, meta]) => meta.resolutionDepth),
+            ).toEqual([1]); // set ops have constant resolution depth
+
+            expect(a.undo()).toBeDefined();
+            expect(a.get()).toEqual([initValue]);
+            expect(
+              a.terminalHeads().map(([_op, meta]) => meta.resolutionDepth),
+            ).toEqual([currentSeqLength + 1]); // undo has non-constant resolution depth in this case, too
+          });
+        });
       });
-    });
 
-    test("linear operation history: set and undo alternating sequence (produces high resolution depth)", () => {
-      const a = Picomerge.create<number>("A");
+      describe("with cache optimization, expecting constant resolution depth", () => {
+        test("linear operation history: undo and redo alternating sequence", () => {
+          const a = Picomerge.create<number>("A", true);
 
-      const initValue = 0;
-      a.set(initValue);
+          a.set(0);
+          a.set(1);
+          expect(a.get()).toEqual([1]);
 
-      const length = 10;
+          const length = 10;
 
-      Array.from({ length }).map((_, i) => {
-        const currentSeqLength = i + 1;
+          Array.from({ length }).map((_, i) => {
+            const currentSeqLength = i + 1;
 
-        a.set(i);
-        expect(a.get()).toEqual([i]);
-        expect(
-          a.terminalHeads().map(([_op, meta]) => meta.resolutionDepth),
-        ).toEqual([1]); // set ops have constant resolution depth
+            expect(a.undo()).toBeDefined();
+            expect(a.get()).toEqual([0]);
+            expect(
+              a.terminalHeads().map(([_op, meta]) => meta.resolutionDepth),
+            ).toEqual([2]); // undo has constant resolution depth
 
-        expect(a.undo()).toBeDefined();
-        expect(a.get()).toEqual([initValue]);
-        expect(
-          a.terminalHeads().map(([_op, meta]) => meta.resolutionDepth),
-        ).toEqual([currentSeqLength + 1]); // undo has non-constant resolution depth in this case, too
+            expect(a.redo()).toBeDefined();
+            expect(a.get()).toEqual([1]);
+            expect(
+              a.terminalHeads().map(([_op, meta]) => meta.resolutionDepth),
+            ).toEqual([2]); // with cache optimization, it's constant
+          });
+        });
+
+        test("linear operation history: set and undo alternating sequence", () => {
+          const a = Picomerge.create<number>("A", true);
+
+          const initValue = 0;
+          a.set(initValue);
+
+          const length = 10;
+
+          Array.from({ length }).map((_, i) => {
+            const currentSeqLength = i + 1;
+
+            a.set(i);
+            expect(a.get()).toEqual([i]);
+            expect(
+              a.terminalHeads().map(([_op, meta]) => meta.resolutionDepth),
+            ).toEqual([1]); // set ops have constant resolution depth
+
+            expect(a.undo()).toBeDefined();
+            expect(a.get()).toEqual([initValue]);
+            expect(
+              a.terminalHeads().map(([_op, meta]) => meta.resolutionDepth),
+            ).toEqual([2]); // with cache optimization, it's constant
+          });
+        });
       });
     });
 

@@ -1531,7 +1531,7 @@ as opposed to just two iterations for an undo operation.
 (800, 0.007120864116586745)
 };
 
-% redo
+% redo without cache opt
 \addplot+ coordinates {
 (200, 0.11390662190387957)
 (400, 0.3034253417572472)
@@ -1539,7 +1539,15 @@ as opposed to just two iterations for an undo operation.
 (800, 0.9230491668859031)
 }; 
 
-\legend{Undo, Redo};
+% redo with cache opt
+\addplot+ coordinates {
+(200, 0.0034364885359536856)
+(400, 0.00369966629659757)
+(600, 0.0026536431978456676)
+(800, 0.0034199498768430203)
+};
+
+\legend{Undo, Redo, Redo + Caching};
 \end{axis} 
 \end{tikzpicture} 
 \caption{
