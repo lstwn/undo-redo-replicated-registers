@@ -1,145 +1,143 @@
-@Manual{automerge,
-author = {{The Automerge Contributors}},
-title = {Automerge CRDT Library},
-year = {2023},
-note = {\url{https://github.com/automerge}}
+@manual{automerge,
+  author = {{The Automerge Contributors}},
+  title  = {Automerge CRDT Library},
+  year   = {2023},
+  note   = {\url{https://github.com/automerge}}
 } 
-@inproceedings{kleppmann2019local,
-  title={Local-first software: you own your data, in spite of the cloud},
-  author={Kleppmann, Martin and Wiggins, Adam and Van Hardenberg, Peter and McGranaghan, Mark},
-  booktitle={Proceedings of the 2019 ACM SIGPLAN International Symposium on New Ideas, New Paradigms, and Reflections on Programming and Software},
-  pages={154--178},
-  year={2019}
+@article{baquero2017pure,
+  title   = {Pure operation-based replicated data types},
+  author  = {Baquero, Carlos and Almeida, Paulo S{\'e}rgio and Shoker, Ali},
+  journal = {arXiv preprint arXiv:1710.04469},
+  year    = {2017}
 }
-
 @inproceedings{Brattli2021undo,
-  author = {Brattli, Eric and Yu, Weihai},
-  title = {Supporting Undo and Redo for Replicated Registers in Collaborative Applications},
+  author    = {Brattli, Eric and Yu, Weihai},
+  title     = {Supporting Undo and Redo for Replicated Registers in Collaborative Applications},
   booktitle = {18th International Conference on Cooperative Design, Visualization, and Engineering},
-  series = {CDVE 2021},
-  year = {2021},
-  month = oct,
-  pages = {195-205},
+  series    = {CDVE 2021},
+  year      = {2021},
+  month     = oct,
+  pages     = {195-205},
   publisher = {Springer LNCS volume 12983},
-  doi = {10.1007/978-3-030-88207-5_19},
-  keywords = {undo}
-}
-@inproceedings{Martin2010xml,
-  author = {Martin, St{\'e}phane and Urso, Pascal and Weiss, St{\'e}phane},
-  title = {Scalable {XML} Collaborative Editing with Undo},
-  booktitle = {On the Move to Meaningful Internet Systems (OTM)},
-  year = {2010},
-  pages = {507--514},
-  publisher = {Springer LNCS volume 6426},
-  month = oct,
-  doi = {10.1007/978-3-642-16934-2_37},
-  eprint = {1010.3615},
-  keywords = {trees, undo}
-}
-@article{Weiss2010LogootUndo,
-  author = {Weiss, Stephane and Urso, Pascal and Molli, Pascal},
-  title = {{Logoot-Undo}: Distributed Collaborative Editing System on {P2P} Networks},
-  journal = {IEEE Transactions on Parallel and Distributed Systems},
-  volume = {21},
-  number = {8},
-  month = aug,
-  year = {2010},
-  issn = {1045-9219},
-  pages = {1162--1174},
-  publisher = {IEEE},
-  doi = {10.1109/TPDS.2009.173},
-  pdf = {https://www.researchgate.net/profile/Pascal_Urso/publication/233882440_Logoot-Undo_Distributed_Collaborative_Editing_System/links/0fcfd50c84f5194937000000.pdf},
-  keywords = {text-editing, Logoot, undo}
-}
-@inproceedings{Yu2019undo,
-  author = {Yu, Weihai and Elvinger, Victorien and Ignat, Claudia-Lavinia},
-  title = {A Generic Undo Support for State-Based {CRDTs}},
-  booktitle = {23rd International Conference on Principles of Distributed Systems},
-  series = {OPODIS 2019},
-  year = {2019},
-  month = nov,
-  publisher = {Dagstuhl LIPIcs},
-  articleno = {14},
-  doi = {10.4230/LIPIcs.OPODIS.2019.14},
-  pdf = {https://drops.dagstuhl.de/opus/volltexte/2020/11800/pdf/LIPIcs-OPODIS-2019-14.pdf},
-  keywords = {state-based, undo}
-}
-@inproceedings{Yu2015undo,
-  author = {Yu, Weihai and Andr{\'e}, Luc and Ignat, Claudia-Lavinia},
-  title = {A {CRDT} Supporting Selective Undo for Collaborative Text Editing},
-  booktitle = {15th IFIP WG 6.1 International Conference on Distributed Applications and Interoperable Systems},
-  series = {DAIS 2015},
-  year = {2015},
-  pages = {193--206},
-  publisher = {Springer LNCS volume 9038},
-  month = jun,
-  doi = {10.1007/978-3-319-19129-4_16},
-  pdf = {https://members.loria.fr/CIgnat/files/pdf/YuDAIS15.pdf},
-  keywords = {text-editing, undo}
+  doi       = {10.1007/978-3-030-88207-5_19},
+  keywords  = {undo}
 }
 @inproceedings{Dolan2020undoable,
-  author = {Dolan, Stephen},
-  title = {Brief Announcement: The Only Undoable {CRDTs} Are Counters},
-  year = {2020},
-  month = aug,
+  author    = {Dolan, Stephen},
+  title     = {Brief Announcement: The Only Undoable {CRDTs} Are Counters},
+  year      = {2020},
+  month     = aug,
   booktitle = {39th Symposium on Principles of Distributed Computing},
-  series = {PODC 2020},
-  pages = {57–58},
+  series    = {PODC 2020},
+  pages     = {57–58},
   publisher = {ACM},
-  doi = {10.1145/3382734.3405749},
-  eprint = {2006.10494},
-  keywords = {set-crdt, counters, undo}
-}
-
-@article{lamport1978time,
-  title={Time, Clocks, and the Ordering of Events in a Distributed System},
-  author={Lamport, Leslie},
-  journal={Communications},
-  year={1978}
-}
-@article{preguicca2018conflict,
-  title={Conflict-free replicated data types: An overview},
-  author={Pregui{\c{c}}a, Nuno},
-  journal={arXiv preprint arXiv:1806.10254},
-  year={2018}
-}
-@inproceedings{sun1998operational,
-  title={Operational transformation in real-time group editors: issues, algorithms, and achievements},
-  author={Sun, Chengzheng and Ellis, Clarence},
-  booktitle={Proceedings of the 1998 ACM conference on Computer supported cooperative work},
-  pages={59--68},
-  year={1998}
-}
-@phdthesis{shapiro2011comprehensive,
-  title={A comprehensive study of convergent and commutative replicated data types},
-  author={Shapiro, Marc and Pregui{\c{c}}a, Nuno and Baquero, Carlos and Zawirski, Marek},
-  year={2011},
-  school={Inria--Centre Paris-Rocquencourt; INRIA}
-}
-@inproceedings{seifried2012regional,
-  title={Regional undo/redo techniques for large interactive surfaces},
-  author={Seifried, Thomas and Rendl, Christian and Haller, Michael and Scott, Stacey},
-  booktitle={Proceedings of the SIGCHI Conference on Human Factors in Computing Systems},
-  pages={2855--2864},
-  year={2012}
+  doi       = {10.1145/3382734.3405749},
+  eprint    = {2006.10494},
+  keywords  = {set-crdt, counters, undo}
 }
 @online{figma2019multiplayer,
-  author = {Evan Wallace},
-  title = {How Figma’s multiplayer technology works},
-  year = 2019,
-  url = {\url{https://web.archive.org/web/20230904085717/https://www.figma.com/blog/how-figmas-multiplayer-technology-works/}},
+  author  = {Evan Wallace},
+  title   = {How Figma’s multiplayer technology works},
+  year    = 2019,
+  url     = {\url{https://web.archive.org/web/20230904085717/https://www.figma.com/blog/how-figmas-multiplayer-technology-works/}},
   urldate = {2023-09-04}
 }
-@inproceedings{ressel1999reducing,
-  title={Reducing the problems of group undo},
-  author={Ressel, Matthias and Gunzenh{\"a}user, Rul},
-  booktitle={Proceedings of the 1999 ACM International Conference on Supporting Group Work},
-  pages={131--139},
-  year={1999}
+@inproceedings{kleppmann2019local,
+  title     = {Local-first software: you own your data, in spite of the cloud},
+  author    = {Kleppmann, Martin and Wiggins, Adam and Van Hardenberg, Peter and McGranaghan, Mark},
+  booktitle = {Proceedings of the 2019 ACM SIGPLAN International Symposium on New Ideas, New Paradigms, and Reflections on Programming and Software},
+  pages     = {154--178},
+  year      = {2019}
 }
-@article{baquero2017pure,
-  title={Pure operation-based replicated data types},
-  author={Baquero, Carlos and Almeida, Paulo S{\'e}rgio and Shoker, Ali},
-  journal={arXiv preprint arXiv:1710.04469},
-  year={2017}
+@article{lamport1978time,
+  title   = {Time, Clocks, and the Ordering of Events in a Distributed System},
+  author  = {Lamport, Leslie},
+  journal = {Communications},
+  year    = {1978}
+}
+@inproceedings{Martin2010xml,
+  author    = {Martin, St{\'e}phane and Urso, Pascal and Weiss, St{\'e}phane},
+  title     = {Scalable {XML} Collaborative Editing with Undo},
+  booktitle = {On the Move to Meaningful Internet Systems (OTM)},
+  year      = {2010},
+  pages     = {507--514},
+  publisher = {Springer LNCS volume 6426},
+  month     = oct,
+  doi       = {10.1007/978-3-642-16934-2_37},
+  eprint    = {1010.3615},
+  keywords  = {trees, undo}
+}
+@article{preguicca2018conflict,
+  title   = {Conflict-free replicated data types: An overview},
+  author  = {Pregui{\c{c}}a, Nuno},
+  journal = {arXiv preprint arXiv:1806.10254},
+  year    = {2018}
+}
+@inproceedings{ressel1999reducing,
+  title     = {Reducing the problems of group undo},
+  author    = {Ressel, Matthias and Gunzenh{\"a}user, Rul},
+  booktitle = {Proceedings of the 1999 ACM International Conference on Supporting Group Work},
+  pages     = {131--139},
+  year      = {1999}
+}
+@inproceedings{seifried2012regional,
+  title     = {Regional undo/redo techniques for large interactive surfaces},
+  author    = {Seifried, Thomas and Rendl, Christian and Haller, Michael and Scott, Stacey},
+  booktitle = {Proceedings of the SIGCHI Conference on Human Factors in Computing Systems},
+  pages     = {2855--2864},
+  year      = {2012}
+}
+@phdthesis{shapiro2011comprehensive,
+  title  = {A comprehensive study of convergent and commutative replicated data types},
+  author = {Shapiro, Marc and Pregui{\c{c}}a, Nuno and Baquero, Carlos and Zawirski, Marek},
+  year   = {2011},
+  school = {Inria--Centre Paris-Rocquencourt; INRIA}
+}
+@inproceedings{sun1998operational,
+  title     = {Operational transformation in real-time group editors: issues, algorithms, and achievements},
+  author    = {Sun, Chengzheng and Ellis, Clarence},
+  booktitle = {Proceedings of the 1998 ACM conference on Computer supported cooperative work},
+  pages     = {59--68},
+  year      = {1998}
+}
+@article{Weiss2010LogootUndo,
+  author    = {Weiss, Stephane and Urso, Pascal and Molli, Pascal},
+  title     = {{Logoot-Undo}: Distributed Collaborative Editing System on {P2P} Networks},
+  journal   = {IEEE Transactions on Parallel and Distributed Systems},
+  volume    = {21},
+  number    = {8},
+  month     = aug,
+  year      = {2010},
+  issn      = {1045-9219},
+  pages     = {1162--1174},
+  publisher = {IEEE},
+  doi       = {10.1109/TPDS.2009.173},
+  pdf       = {https://www.researchgate.net/profile/Pascal_Urso/publication/233882440_Logoot-Undo_Distributed_Collaborative_Editing_System/links/0fcfd50c84f5194937000000.pdf},
+  keywords  = {text-editing, Logoot, undo}
+}
+@inproceedings{Yu2015undo,
+  author    = {Yu, Weihai and Andr{\'e}, Luc and Ignat, Claudia-Lavinia},
+  title     = {A {CRDT} Supporting Selective Undo for Collaborative Text Editing},
+  booktitle = {15th IFIP WG 6.1 International Conference on Distributed Applications and Interoperable Systems},
+  series    = {DAIS 2015},
+  year      = {2015},
+  pages     = {193--206},
+  publisher = {Springer LNCS volume 9038},
+  month     = jun,
+  doi       = {10.1007/978-3-319-19129-4_16},
+  pdf       = {https://members.loria.fr/CIgnat/files/pdf/YuDAIS15.pdf},
+  keywords  = {text-editing, undo}
+}
+@inproceedings{Yu2019undo,
+  author    = {Yu, Weihai and Elvinger, Victorien and Ignat, Claudia-Lavinia},
+  title     = {A Generic Undo Support for State-Based {CRDTs}},
+  booktitle = {23rd International Conference on Principles of Distributed Systems},
+  series    = {OPODIS 2019},
+  year      = {2019},
+  month     = nov,
+  publisher = {Dagstuhl LIPIcs},
+  articleno = {14},
+  doi       = {10.4230/LIPIcs.OPODIS.2019.14},
+  pdf       = {https://drops.dagstuhl.de/opus/volltexte/2020/11800/pdf/LIPIcs-OPODIS-2019-14.pdf},
+  keywords  = {state-based, undo}
 }

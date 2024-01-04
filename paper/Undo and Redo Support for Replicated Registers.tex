@@ -1,11 +1,9 @@
-%%
-%% For submission and review of your manuscript please change the
-%% command to \documentclass[manuscript, screen, review]{acmart}.
-%%
-%% When submitting camera ready or to TAPS, please change the command
-%% to \documentclass[sigconf]{acmart} or whichever template is required
-%% for your publication.
-\documentclass[sigconf,natbib=false]{acmart}
+%% For camera-ready version:
+% \documentclass[sigconf,natbib=false]{acmart}
+%% For review version:
+\documentclass[sigplan,natbib=false,review]{acmart}
+\renewcommand\footnotetextcopyrightpermission[1]{}
+\settopmatter{printfolios=true,printacmref=false}
 
 %%
 %% \BibTeX command to typeset BibTeX logo in the docs
@@ -19,8 +17,8 @@
 %% the commands and values with those provided to you when you
 %% complete the rights form.
 \setcopyright{acmcopyright}
-\copyrightyear{2018}
-\acmYear{2018}
+\copyrightyear{2024}
+\acmYear{2024}
 \acmDOI{XXXXXXX.XXXXXXX}
 
 %%
@@ -121,7 +119,7 @@
 \usepackage{booktabs}
 
 \usepackage[acronym]{glossaries}
-\makeglossaries
+\makeglossaries{}
 \newacronym{crdt}{CRDT}{Conflict-Free Replicated Data Type}
 \newacronym{mvr}{MVR}{Multi-Valued Replicated Register}
 \newacronym{lwwr}{LWWR}{Last-Write-Wins Register}
@@ -182,7 +180,7 @@
 %% other information printed in the page headers. This command allows
 %% the author to define a more concise list
 %% of authors' names for this purpose.
-\renewcommand{\shortauthors}{Stewen et al.}
+% \renewcommand{\shortauthors}{Stewen et al.}
 
 %%
 %% The abstract is a short summary of the work to be presented in the
@@ -676,10 +674,18 @@ The last principle captures a common usage pattern of undo and redo.
 Often users want to look at a past version and then restore to the most
 recent version without changing anything.
 
+%% TODO: make local undo more convincing
+%% - consistent with multi register case
+%% - global undo implicitly assumes that a user is aware of all remote changes
+%%   but the weakest assumption we can reasonably do is to assume that he is aware
+%%   of his own changes
+%% - technical challenges and stack semantics in eventually consistent systems
+%%   (refer to appendix) out of order delivery
+
 % Assume a merge operation that merges $k$ branches into just one branch.
 % Undoing that merge operation, should restore the $k$ previous siblings, too.
 
-\section{Background on \glspl*{mvr}}\label{sec:background}
+\section{Background on MVRs}\label{sec:background}
 
 \begin{figure*}[!ht]
 \centering
@@ -1769,6 +1775,8 @@ highest \gls*{opid} of the effect-free sequence.
 
 \section{Related Work}\label{sec:related-work}
 
+%% TODO: y.js code review
+
 A common approach to undo and redo in the literature is to attach a counter
 (called \emph{degree} in~\cite{Weiss2010LogootUndo} or
 \emph{undo length} in~\cite{Brattli2021undo,Yu2019undo}) to each operation.
@@ -2001,14 +2009,50 @@ I'm thankful for Martin Kleppmann's invaluable feedback and guidance.
 \section{Challenges with Global Undo}
 
 Although we argued against the behavior of global undo, we put forward
-some considerations if using it in an eventually consistent system that
+some considerations if using it in an eventually consistent setting that
 allows for operations to arrive in any order.
 
 \subsection{Undo Order}
 
-%% TODO: explain here
-Finality issue.
-Stack turns into a priority queue.
+In general, an undo mechanism requires some order to determine which
+operation(s) to undo next. 
+While this does not have to be a total order and
+one could come up with a scheme how to undo a partial order,
+the eventual consistent setting poses a hard technical limit:
+Suppose there is a sequence of undo operations and the last undone operation
+carries timestamp $t_1$ and then an operation is delivered out-of-order with
+timestamp $t_2$ such that $t_1 < t_2$ according to the (partial) order.
+This means that \emph{if} the out-of-order operation had been delivered earlier it
+had also been undone by the undo sequence.
+We call such operations \emph{out-of-order delivered and behind the undo cursor}.
+This leaves the question of how to treat these operations.
+A potential solution is to turn the undo stack into a priority queue but
+that may cause hard to understand jumps in time for users.
+Another option is to ignore these operations but that poses the issue of
+how to deal with them upon subsequent redos.
+We are not convinced of any good solution here and think of this as another,
+rather technical reason to avoid global undo behavior in eventually consistent
+settings.
+
+Nevertheless, we briefly sketch a scheme how to undo a partial order.
+After a merge operation is undone, assume there are multiple branches
+that are candidates to undo next.
+For each branch a cursor pointing to the next operation that is due for undo
+is created and it initially points to the respective tip of the branch.
+Upon undo, the \gls{mvr} is populated with all values contributed by the
+operations referenced by the cursors, and the cursors are advanced
+to point to their predecessors.
+Different strategies may be employed to coordinate the cursors in case
+any cursor hits a common ancestor or another merge operation.
+
+If the increased complexity from the cursor handling is undesired,
+the total order imposed by the operation ids could also be used.
+However, the out of order delivery issue remains for both total and
+partial orders.
+
+In contrast, local undo restricts the undoable operations to the subset of
+the actor's own operations which are always delivered in order at each actor.
+Hence, local undo does not suffer from this problem.
 
 \subsection{Metadata Overhead}
 

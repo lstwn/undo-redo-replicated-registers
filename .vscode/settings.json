@@ -1,0 +1,42 @@
+{
+  "latex-workshop.latex.recipe.default": "lualatexmk",
+  "latex-workshop.latex.recipes": [
+    {
+      "name": "lualatexmk",
+      "tools": ["lualatexmk"]
+    },
+    {
+      "name": "pdflatexmk",
+      "tools": ["pdflatexmk"]
+    }
+  ],
+  "latex-workshop.latex.tools": [
+    {
+      "name": "lualatexmk",
+      "command": "latexmk",
+      "args": [
+        "-synctex=1",
+        "-interaction=nonstopmode",
+        "-file-line-error",
+        "-lualatex",
+        "-outdir=%OUTDIR%",
+        "%DOC%"
+      ],
+      "env": {}
+    },
+    {
+      "name": "pdflatexmk",
+      "command": "latexmk",
+      "args": [
+        "-synctex=1",
+        "-interaction=nonstopmode",
+        "-file-line-error",
+        "-pdflatex",
+        "-outdir=%OUTDIR%",
+        "%DOC%"
+      ],
+      "env": {}
+    }
+  ],
+  "cSpell.words": ["Lamport"]
+}
