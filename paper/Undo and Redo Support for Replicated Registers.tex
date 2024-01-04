@@ -649,10 +649,20 @@ received, settling on the third undo approach.
 We suspect that this was a deliberately chosen trade-off between
 user experience and implementation simplicity in favor of the latter.
 Hence, we do not consider this behavior any further.
-Moreover, the local undo and global redo behavior is consistent with our
+We follow the approach of mainstream collaboration software for two reasons:
+First, the local undo and global redo behavior is consistent with our
 findings from the two-register scenario in \Cref{fig:intro-example}.
 To maintain a consistent user experience, we favor similar semantics
 regardless of the number of registers involved.
+Second, global undo implicitly assumes that a user is aware of all remote changes
+but the strongest assumption we can reasonably make is to assume that she is aware
+of her own changes.
+Moreover, global undo poses some additional challenges in an eventually
+consistent setting that are described in \Cref{adx:global-undo-challenges}.
+The fact that these challenges do not arise in collaborative
+software that can afford a central server and online clients,
+yet none of them chose to implement global undo, makes a strong
+case to follow their lead.
 We derive the following principles for undo and redo in a collaborative
 setting:
 
@@ -673,14 +683,6 @@ setting:
 The last principle captures a common usage pattern of undo and redo.
 Often users want to look at a past version and then restore to the most
 recent version without changing anything.
-
-%% TODO: make local undo more convincing
-%% - consistent with multi register case
-%% - global undo implicitly assumes that a user is aware of all remote changes
-%%   but the weakest assumption we can reasonably do is to assume that he is aware
-%%   of his own changes
-%% - technical challenges and stack semantics in eventually consistent systems
-%%   (refer to appendix) out of order delivery
 
 % Assume a merge operation that merges $k$ branches into just one branch.
 % Undoing that merge operation, should restore the $k$ previous siblings, too.
@@ -2006,7 +2008,7 @@ I'm thankful for Martin Kleppmann's invaluable feedback and guidance.
 %% If your work has an appendix, this is the place to put it.
 \appendix
 
-\section{Challenges with Global Undo}
+\section{Challenges with Global Undo}\label{adx:global-undo-challenges}
 
 Although we argued against the behavior of global undo, we put forward
 some considerations if using it in an eventually consistent setting that
@@ -2018,10 +2020,11 @@ In general, an undo mechanism requires some order to determine which
 operation(s) to undo next. 
 While this does not have to be a total order and
 one could come up with a scheme how to undo a partial order,
-the eventual consistent setting poses a hard technical limit:
-Suppose there is a sequence of undo operations and the last undone operation
-carries timestamp $t_1$ and then an operation is delivered out-of-order with
-timestamp $t_2$ such that $t_1 < t_2$ according to the (partial) order.
+the eventual consistent setting poses a technical limit:
+Suppose there is a sequence of undo operations and the first undone operation
+has timestamp $t_f$ and the last undone operation $t_l$.
+Then, an operation is delivered out-of-order with
+timestamp $t_m$ such that $t_l < t_m < t_f$ according to the (partial) order.
 This means that \emph{if} the out-of-order operation had been delivered earlier it
 had also been undone by the undo sequence.
 We call such operations \emph{out-of-order delivered and behind the undo cursor}.
@@ -2049,10 +2052,9 @@ If the increased complexity from the cursor handling is undesired,
 the total order imposed by the operation ids could also be used.
 However, the out of order delivery issue remains for both total and
 partial orders.
-
 In contrast, local undo restricts the undoable operations to the subset of
-the actor's own operations which are always delivered in order at each actor.
-Hence, local undo does not suffer from this problem.
+the actor's own operations which are always delivered in order at each actor,
+and thereby does not suffer from this problem.
 
 \subsection{Metadata Overhead}
 
