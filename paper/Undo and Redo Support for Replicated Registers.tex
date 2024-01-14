@@ -1352,6 +1352,8 @@ previously undone \setop{3}{A}{4} operation.
 
 \section{Optimization}\label{sec:opt}
 
+%% TODO: put this in the evaluation section?
+
 We can make use of two observations to optimize the algorithm:
 First, the predecessors of an operation remain constant after their generation.
 Incoming concurrent operations may have existing operations as their predecessors
@@ -1377,8 +1379,6 @@ Storing the values in sorted order makes that part of the \opidtrace{} redundant
 Only the first part of the \opidtrace{} up to the \restopkind{} is important for figuring
 out the relation of the cached values with other values contributed by other operations.
 However, this requires the sorting algorithm to be stable.
-
-%% TODO: example maybe?
 
 \section{Evaluation}\label{sec:evaluation}
 
@@ -1779,20 +1779,25 @@ highest \gls*{opid} of the effect-free sequence.
 
 %% TODO: y.js code review
 
-A common approach to undo and redo in the literature is to attach a counter
-(called \emph{degree} in~\cite{Weiss2010LogootUndo} or
-\emph{undo length} in~\cite{Brattli2021undo,Yu2019undo}) to each operation.
+The terms local and global undo were introduced by the \acrlong{ot}
+literature in the context of collaborative text
+editing~\cite{sun2000undo,ressel1999reducing, abowd1992giving},
+but this distinction is less established in the context of \glspl{crdt}.
+
+A common approach to undo and redo in the \gls{crdt} literature is
+to attach a counter
+(sometimes called \emph{degree}~\cite{Weiss2010LogootUndo} or
+\emph{undo length}~\cite{Brattli2021undo,Yu2019undo}) to each operation.
 Some approaches~\cite{Weiss2010LogootUndo,Martin2010xml} initialize the
 counter to $1$ and decrement it on each undo and increment it on each redo.
-If the counter is positive, the operation is applied (``visible''),
-otherwise it is not (``invisible''),
-resembling a voting approach between all actors.
+If the counter is positive, the operation is visible,
+otherwise it is invisible.
 Other approaches~\cite{Brattli2021undo,Yu2019undo} initialize the counter
 to $0$ and increment it on each undo and redo.
-If it is even, the operation is applied, otherwise it is not.
+If it is even, the operation is visible, otherwise it is not.
 When merging conflicting counters of an operation, the maximum is used.
-Yet, counter-based approaches discuss undo only for a single operation
-and do not allow to skip over remote operations, which is required
+Yet, counter-based approaches handle undo only for a single operation
+and do not allow skipping over remote operations, which is required
 for local undo behavior as we pointed out in \Cref{sec:semantics}.
 To illustrate this we consider \Cref{fig:anti-counter}.
 It resembles the single-register scenario in \Cref{fig:intro-example} but
@@ -1806,9 +1811,9 @@ $B$'s subsequent undo requires to turn $A$'s \setopkind{} visible again to
 obtain the correct red coloring (step (5)).
 To achieve this, $B$'s \emph{undo} must cause the effect of a \emph{redo}
 of $A$'s \setopkind{}.
-Due to this simple example already showing limitations (and not even considering
+Since this simple example is already difficult (and not even considering
 concurrency), we believe that counter-based approaches are not suitable
-for local undo behavior.
+for implementing local undo.
 
 %% TODO: add further example with concurrency
 
@@ -1942,24 +1947,22 @@ for local undo behavior.
 }\label{fig:anti-counter}
 \end{figure}
 
-Yu et al.~\cite{Yu2015undo} deals with selective undo in the context of strings.
-Selective undo is form of undo which allows a user to undo any operation,
+Yu et al.~\cite{Yu2015undo} deal with selective undo in the context of strings.
+Selective undo is a form of undo which allows a user to undo any operation,
 regardless of \emph{where and when} it was generated.
-In contrast, global undo allows for undoing a remote operation as well,
-but it only allows for undoing in reverse chronological order.
-Although the distinction between global and local undo is not very well established
-in the \gls*{crdt} literature, it appears in the \gls*{ot}
-literature~\cite{ressel1999reducing}.
-A later work of Yu et al.~\cite{Yu2019undo} describes a generic undo mechanism
-but it only applies to state-based \glspl*{crdt}.
-Since Automerge is both a state-based and an operation-based \gls*{crdt},
-this approach is not feasible for Automerge.
+In contrast, global undo allows undoing a remote operation as well,
+but it only allows undoing in reverse chronological order.
+A later work of Yu et al.~\cite{Yu2019undo} describes a generic undo mechanism,
+but it only applies to state-based \glspl*{crdt}, is assuming global undo
+behavior, and focusses on concurrent undo and redo of a single operation.
+It does not address the issue of how to order operations on the undo
+stack with global undo.
 
 Finally,~\cite{Dolan2020undoable} is a rather theoretical work that
 points out limitations of undo for set and counter \glspl*{crdt}.
 Martin et al.~\cite{Martin2010xml} discuss undo in the context of XML-like documents.
 To the best of our knowledge, Brattli et al.~\cite{Brattli2021undo} is the
-only work that also discusses undo and redo in the context of replicated registers
+only work that also discusses undo and redo in the context of replicated registers,
 but they assume global undo behavior.
 
 \section{Future Work}\label{sec:future-work}
@@ -1995,12 +1998,6 @@ in a collaborative setting and provide a foundation for further research around
 more complex data types that allow to undo and redo operations.
 
 %%
-%% Acknowledgements
-\begin{acks}
-I'm thankful for Martin Kleppmann's invaluable feedback and guidance.
-\end{acks}
-
-%%
 %% Print the bibliography
 \printbibliography
 
@@ -2012,7 +2009,7 @@ I'm thankful for Martin Kleppmann's invaluable feedback and guidance.
 
 Although we argued against the behavior of global undo, we put forward
 some considerations if using it in an eventually consistent setting that
-allows for operations to arrive in any order.
+allows for operations to arrive in causal (or even arbitrary) order.
 
 \subsection{Undo Order}
 
@@ -2029,7 +2026,8 @@ This means that \emph{if} the out-of-order operation had been delivered earlier 
 had also been undone by the undo sequence.
 We call such operations \emph{out-of-order delivered and behind the undo cursor}.
 This leaves the question of how to treat these operations.
-A potential solution is to turn the undo stack into a priority queue but
+A potential solution is to turn the undo stack into a priority queue and
+then undo the operation at the time of arrival at the undoing actor but
 that may cause hard to understand jumps in time for users.
 Another option is to ignore these operations but that poses the issue of
 how to deal with them upon subsequent redos.
@@ -2038,6 +2036,8 @@ rather technical reason to avoid global undo behavior in eventually consistent
 settings.
 
 Nevertheless, we briefly sketch a scheme how to undo a partial order.
+The idea is to use multiple cursors that undo in parallel whenever the
+partial order cannot compare operations (due to concurrency).
 After a merge operation is undone, assume there are multiple branches
 that are candidates to undo next.
 For each branch a cursor pointing to the next operation that is due for undo
@@ -2059,8 +2059,8 @@ and thereby does not suffer from this problem.
 \subsection{Metadata Overhead}
 
 Local undo partitions the set of operations into disjoint sets,
-one for each actor.
-Since an actor can only undo (or redo) her own operations,
+one set for each actor.
+Since an actor can only undo her own operations,
 it cannot happen that concurrently the same operation is undone multiple times,
 or that the same operation is both undone and redone by different actors.
 While it certainly is possible to design some data structure to account for this,
