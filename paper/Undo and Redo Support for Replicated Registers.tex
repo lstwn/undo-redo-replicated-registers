@@ -195,10 +195,9 @@ both in terms of their semantics and implementation.
 
 We survey the undo and redo semantics of current mainstream collaboration software
 and derive principles for undo and redo behavior in a collaborative setting.
-\acrshortpl{crdt} are a tool to allow for concurrent editing of a shared document without
-requiring central coordination.
-A simple \acrshort{crdt} is the \acrlong{mvr}, for which we present a novel
-undo and redo algorithm that implements our identified undo and redo semantics.
+We then apply these principles to a simple \acrshort{crdt}, the \acrlong{mvr},
+and present a novel undo and redo algorithm that implements the undo and redo
+semantics that we believe are most consistent with users' expectations.
 \end{abstract}
 
 %%
@@ -207,38 +206,38 @@ undo and redo algorithm that implements our identified undo and redo semantics.
 %%
 \begin{CCSXML}
 <ccs2012>
- <concept>
-  <concept_id>00000000.0000000.0000000</concept_id>
-  <concept_desc>Do Not Use This Code, Generate the Correct Terms for Your Paper</concept_desc>
-  <concept_significance>500</concept_significance>
- </concept>
- <concept>
-  <concept_id>00000000.00000000.00000000</concept_id>
-  <concept_desc>Do Not Use This Code, Generate the Correct Terms for Your Paper</concept_desc>
-  <concept_significance>300</concept_significance>
- </concept>
- <concept>
-  <concept_id>00000000.00000000.00000000</concept_id>
-  <concept_desc>Do Not Use This Code, Generate the Correct Terms for Your Paper</concept_desc>
-  <concept_significance>100</concept_significance>
- </concept>
- <concept>
-  <concept_id>00000000.00000000.00000000</concept_id>
-  <concept_desc>Do Not Use This Code, Generate the Correct Terms for Your Paper</concept_desc>
-  <concept_significance>100</concept_significance>
- </concept>
-</ccs2012>
+   <concept>
+       <concept_id>10003120.10003130.10003233</concept_id>
+       <concept_desc>Human-centered computing~Collaborative and social computing systems and tools</concept_desc>
+       <concept_significance>500</concept_significance>
+       </concept>
+   <concept>
+       <concept_id>10010147.10010919.10010172</concept_id>
+       <concept_desc>Computing methodologies~Distributed algorithms</concept_desc>
+       <concept_significance>300</concept_significance>
+       </concept>
+   <concept>
+       <concept_id>10002951.10003152.10003166.10003172</concept_id>
+       <concept_desc>Information systems~Remote replication</concept_desc>
+       <concept_significance>300</concept_significance>
+       </concept>
+   <concept>
+       <concept_id>10002951.10002952.10002971</concept_id>
+       <concept_desc>Information systems~Data structures</concept_desc>
+       <concept_significance>100</concept_significance>
+       </concept>
+ </ccs2012>
 \end{CCSXML}
 
-\ccsdesc[500]{Do Not Use This Code~Generate the Correct Terms for Your Paper}
-\ccsdesc[300]{Do Not Use This Code~Generate the Correct Terms for Your Paper}
-\ccsdesc{Do Not Use This Code~Generate the Correct Terms for Your Paper}
-\ccsdesc[100]{Do Not Use This Code~Generate the Correct Terms for Your Paper}
+\ccsdesc[500]{Human-centered computing~Collaborative and social computing systems and tools}
+\ccsdesc[300]{Computing methodologies~Distributed algorithms}
+\ccsdesc[300]{Information systems~Remote replication}
+\ccsdesc[100]{Information systems~Data structures}
 
 %%
 %% Keywords. The author(s) should pick words that accurately describe
 %% the work being presented. Separate the keywords with commas.
-\keywords{undo, redo, CRDT, eventual consistency}
+\keywords{undo, redo, CRDT, eventual consistency, collaborative editing}
 
 % \received{20 February 2007}
 % \received[revised]{12 March 2009}
