@@ -240,9 +240,9 @@ undo and redo algorithm that implements our identified undo and redo semantics.
 %% the work being presented. Separate the keywords with commas.
 \keywords{undo, redo, CRDT, eventual consistency}
 
-\received{20 February 2007}
-\received[revised]{12 March 2009}
-\received[accepted]{5 June 2009}
+% \received{20 February 2007}
+% \received[revised]{12 March 2009}
+% \received[accepted]{5 June 2009}
 
 %%
 %% This command processes the author and affiliation and title
@@ -1965,37 +1965,21 @@ To the best of our knowledge, Brattli et al.~\cite{Brattli2021undo} is the
 only work that also discusses undo and redo in the context of replicated registers,
 but they assume global undo behavior.
 
-\section{Future Work}\label{sec:future-work}
+\section{Conclusion}\label{sec:conclusion}
 
-When dealing with collaborative text editing and \glspl*{crdt},
-every single character inserted or deleted is often represented by an operation.
-Since users usually do not expect undo and redo to be character-based but
-based on words or the changes over a period of time, there exists the opportunity
-to do user experience research about this and then reconcile the findings
-with this work.
-
-Although we argued against global undo behavior in \Cref{sec:semantics},
-it might be useful to have global undo in addition to local undo.
-The design and implementation of this operation and its redo counterpart
-represents another avenue for future work.
-
-\section{Summary}\label{sec:summary}
-
-We surveyed the semantics of undo and redo of existing collaboration software,
-showcased different semantics for undo and redo in a collaborative setting,
-and made the case for local undo and global redo behavior.
-Furthermore, we presented a novel algorithm for local undo and global redo
-on top of an \gls*{mvr} by looking at operation histories
-as directed acyclic graphs.
-Instead of adding a new conflict resolution mechanism (like counters for
-determining whether an operation is undone or not), we modeled undo and redo
-as just another operation kind that is treated like any other operation in the
-operation history.
-We showed that our algorithm is correct and evaluated the performance
-of our reference implementation written in TypeScript.
-We hope that our contributions will clarify the semantics of undo and redo
-in a collaborative setting and provide a foundation for further research around
-more complex data types that allow to undo and redo operations.
+We tested the semantics of undo and redo of existing collaboration software,
+and found that almost all use local undo.
+We then presented a novel algorithm for local undo on an \gls*{mvr}
+by traversing operation histories represented as directed acyclic graphs.
+The Automerge \gls{crdt} implementation already stores such an operation graph
+to allow past states of a document to be inspected;
+therefore our algorithm does not incur any additional overhead in this context.
+The implementation of our algorithm is currently a standalone prototype
+written in Typescript, but we plan to integrate it into Automerge in the future.
+We believe that our algorithm can also be generalized from a single \gls{mvr}
+to more complex \glspl{crdt}, for example by treating every key in a map and
+every element in a list as a \gls{mvr}, and by using (respectively) one shared
+undo and redo stack for all \glspl{mvr} in the entire data structure.
 
 %%
 %% Print the bibliography
