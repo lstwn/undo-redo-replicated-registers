@@ -251,22 +251,12 @@ semantics that we believe are most consistent with users' expectations.
 \section{Introduction}\label{sec:introduction}
 
 Collaborative editing is an essential feature in modern software.
-Current mainstream collaboration software puts most of the collaborative
-editing logic in the cloud, at the cost of privacy, control over data
-and latency~\cite{kleppmann2019local}.
-Despite these drawbacks, the power of collaboration is so compelling that
-users came to accept this trade-off.
-In recent times, however, there has been a push towards local-first
-software~\cite{kleppmann2019local} that aims to bring the benefits of
-collaboration to software that works with, but does not require the cloud
-to function.
-\glspl*{crdt}~\cite{preguicca2018conflict}
-are the major technological enabler of this movement.
+\glspl*{crdt}~\cite{preguicca2018conflict} are gaining interest because they
+enable collaboration in local-first software~\cite{kleppmann2019local},
+that works with, but does not require the cloud to function.
 They allow for concurrent editing of a shared document without requiring
-central coordination while still guaranteeing strong eventual consistency.
-Hence, they are a good fit for local-first software where clients
-are offline for extended periods of time and need to synchronize their
-changes when they come back online.
+central coordination while still guaranteeing strong eventual
+consistency~\cite{shapiro2011comprehensive}.
 
 As much as collaboration is a common feature today, so is undo and redo support.
 Integrating it with \glspl*{crdt} is not trivial.
@@ -274,17 +264,10 @@ Although there are some published algorithms for undo and redo in \glspl*{crdt}
 (see \Cref{sec:related-work}),
 their semantics do not match the behavior of current mainstream applications
 as detailed in \Cref{sec:semantics}.
-However, the algorithms of mainstream applications have not been published
-or analyzed in research literature and we
-believe that their semantics are more in line with user expectations.
-
-We aim to fill this gap by providing two contributions.
-First, we survey the semantics of undo and redo in current mainstream
-collaboration software and derive principles of undo and redo in a collaborative
-setting based on this survey.
-Second, we propose a novel undo and redo algorithm that adheres to the
-identified semantics.
-It works on top of \glspl*{mvr}~\cite{shapiro2011comprehensive},
+We believe the semantics of mainstream applications are more in line with
+user expectations for an undo feature, and therefore we propose an undo/redo
+algorithm for \glspl{crdt} that follows this mainstream behavior.
+It works on top of a \gls*{mvr}~\cite{shapiro2011comprehensive},
 a core \gls*{crdt} that is often used as a basic
 building block to build more complex \glspl*{crdt} via composition.
 The intended environment for this algorithm is the Automerge~\cite{automerge} library,
