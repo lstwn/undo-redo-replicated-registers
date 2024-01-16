@@ -171,7 +171,7 @@
 \email{martin@kleppmann.com}
 \affiliation{%
  \institution{University of Cambridge}
- \country{Great Britian}
+ \country{United Kingdom}
 }
 
 %%
@@ -275,11 +275,10 @@ which is a JSON \gls*{crdt} that is based on \glspl*{mvr}.
 
 \section{Semantics of Undo/Redo with Multiple Users}\label{sec:semantics}
 
-\begin{figure}[h]
+\begin{figure}
 \centering
 \begin{tikzpicture}[node distance=0.23cm]
   \coordinate (c1) at (0,0);
-  \coordinate (c2) at (0,-3.85);
 
   \tikzset{
     canvas/.style={
@@ -304,13 +303,27 @@ which is a JSON \gls*{crdt} that is based on \glspl*{mvr}.
     casediv/.style={
       black!70,
     },
+    next/.style={
+      <-,
+      >={Stealth[round]},
+    },
+    caselabel/.style={
+      rectangle,
+      draw,
+      fill=white,
+      minimum width = 238.5pt,
+    },
   }
 
   \def\black{black}
   \def\green{green!60!black}
   \def\red{red}
-  \def\upperoffset{20pt}
-  \def\loweroffset{182pt}
+  \def\upperoffset{38pt}
+  \def\loweroffset{300pt}
+  \def\casemargin{1.32cm}
+  \def\caselabeldist{17pt}
+
+  % two registers, global undo
 
   \node[
     canvas,
@@ -341,7 +354,7 @@ which is a JSON \gls*{crdt} that is based on \glspl*{mvr}.
           below = of r1,
         ] (r2) {\vphantom{bg}black};
     \end{tikzpicture}
-  } edge (1a);
+  } edge [next] (1a);
 
   \node[
     canvas,
@@ -357,7 +370,7 @@ which is a JSON \gls*{crdt} that is based on \glspl*{mvr}.
           below = of r1,
         ] (r2) {\vphantom{bg}green};
     \end{tikzpicture}
-  } edge (1b);
+  } edge [next] (1b);
 
   \node[
     canvas,
@@ -366,14 +379,14 @@ which is a JSON \gls*{crdt} that is based on \glspl*{mvr}.
   ] (1d) {
     \begin{tikzpicture}[node distance=3pt]
       \node[
-          rect=\black,
-        ] (r1) at (0,0) {\vphantom{bg}black};
+          rect=\red,
+        ] (r1) at (0,0) {\vphantom{bg}red};
       \node[
-          rect=\green,
+          rect=\black,
           below = of r1,
-        ] (r2) {\vphantom{bg}green};
+        ] (r2) {\vphantom{bg}black};
     \end{tikzpicture}
-  } edge (1c);
+  } edge [next] (1c);
 
   \node[
     canvas,
@@ -389,42 +402,23 @@ which is a JSON \gls*{crdt} that is based on \glspl*{mvr}.
           below = of r1,
         ] (r2) {\vphantom{bg}green};
     \end{tikzpicture}
-  } edge (1d);
+  } edge [next] (1d);
 
-  %%%%
+  % two registers, local undo
 
-  \coordinate (d1s) at ($(1a.north)!0.5!(1b.north)+(0,+\upperoffset)$);
-  \coordinate (d1e) at ($(1a.north)!0.5!(1b.north)+(0,-\loweroffset)$);
-
-  \coordinate (d2s) at ($(1b.north)!0.5!(1c.north)+(0,+\upperoffset)$);
-  \coordinate (d2e) at ($(1b.north)!0.5!(1c.north)+(0,-\loweroffset)$);
-
-  \coordinate (d3s) at ($(1c.north)!0.5!(1d.north)+(0,+\upperoffset)$);
-  \coordinate (d3e) at ($(1c.north)!0.5!(1d.north)+(0,-\loweroffset)$);
-
-  \coordinate (d4s) at ($(1d.north)!0.5!(1e.north)+(0,+\upperoffset)$);
-  \coordinate (d4e) at ($(1d.north)!0.5!(1e.north)+(0,-\loweroffset)$);
-
-  \draw[stepline] (d1s) -- (d1e);
-  \draw[stepline] (d2s) -- (d2e);
-  \draw[stepline] (d3s) -- (d3e);
-  \draw[stepline] (d4s) -- (d4e);
-
-  \draw (1b.north)+(-0.2cm,+\upperoffset) edge ["A set",optrans] ($(1a.north)+(0,+\upperoffset)$);
-  \draw (1c.north)+(-0.2cm,+\upperoffset) edge ["B set",optrans] ($(1b.north)+(0,+\upperoffset)$);
-  \draw (1d.north)+(-0.2cm,+\upperoffset) edge ["A undo",optrans] ($(1c.north)+(0,+\upperoffset)$);
-  \draw (1e.north)+(-0.2cm,+\upperoffset) edge ["A redo",optrans] ($(1d.north)+(0,+\upperoffset)$);
-
-  %%%%
-  
   \node[
     canvas,
     label={[]above:(2a)},
-  ] (2a) at (c2) {
+    below=\casemargin of 1a,
+  ] (2a) {
     \begin{tikzpicture}[node distance=3pt]
       \node[
           rect=\black,
         ] (r1) at (0,0) {\vphantom{bg}black};
+      \node[
+          rect=\black,
+          below = of r1,
+        ] (r2) {\vphantom{bg}black};
     \end{tikzpicture}
   };
 
@@ -437,8 +431,12 @@ which is a JSON \gls*{crdt} that is based on \glspl*{mvr}.
       \node[
           rect=\red,
         ] (r1) at (0,0) {\vphantom{bg}red};
+      \node[
+          rect=\black,
+          below = of r1,
+        ] (r2) {\vphantom{bg}black};
     \end{tikzpicture}
-  } edge (2a);
+  } edge [next] (2a);
 
   \node[
     canvas,
@@ -447,89 +445,283 @@ which is a JSON \gls*{crdt} that is based on \glspl*{mvr}.
   ] (2c) {
     \begin{tikzpicture}[node distance=3pt]
       \node[
+          rect=\red,
+        ] (r1) at (0,0) {\vphantom{bg}red};
+      \node[
           rect=\green,
-        ] (r1) at (0,0) {\vphantom{bg}green};
+          below = of r1,
+        ] (r2) {\vphantom{bg}green};
     \end{tikzpicture}
-  } edge (2b);
-
-  %%%
+  } edge [next] (2b);
 
   \node[
     canvas,
-    label={[]above:(2d1)},
-    above right = of 2c,
-    xshift=+2pt,
-    yshift=+4pt,
-  ] (2d1) {
+    label={[]above:(2d)},
+    right = of 2c,
+  ] (2d) {
+    \begin{tikzpicture}[node distance=3pt]
+      \node[
+          rect=\black,
+        ] (r1) at (0,0) {\vphantom{bg}black};
+      \node[
+          rect=\green,
+          below = of r1,
+        ] (r2) {\vphantom{bg}green};
+    \end{tikzpicture}
+  } edge [next] (2c);
+
+  \node[
+    canvas,
+    label={[]above:(2e)},
+    right = of 2d,
+  ] (2e) {
+    \begin{tikzpicture}[node distance=3pt]
+      \node[
+          rect=\red,
+        ] (r1) at (0,0) {\vphantom{bg}red};
+      \node[
+          rect=\green,
+          below = of r1,
+        ] (r2) {\vphantom{bg}green};
+    \end{tikzpicture}
+  } edge [next] (2d);
+
+  % one register, global undo
+
+  \node[
+    canvas,
+    label={[]above:(3a)},
+    below=\casemargin of 2a,
+  ] (3a) {
     \begin{tikzpicture}[node distance=3pt]
       \node[
           rect=\black,
         ] (r1) at (0,0) {\vphantom{bg}black};
     \end{tikzpicture}
-  } edge (2c);
+  };
 
   \node[
     canvas,
-    label={[]above:(2e1)},
-    above right = of 2d1,
-    xshift=+2pt,
-    yshift=-7pt,
-  ] (2d1e1) {
+    label={[]above:(3b)},
+    right = of 3a,
+  ] (3b) {
     \begin{tikzpicture}[node distance=3pt]
       \node[
           rect=\red,
         ] (r1) at (0,0) {\vphantom{bg}red};
     \end{tikzpicture}
-  } edge (2d1);
+  } edge [next] (3a);
 
   \node[
     canvas,
-    label={[]above:(2e2)},
-    below right = of 2d1,
-    xshift=+2pt,
-    yshift=+7pt,
-  ] (2d1e2) {
+    label={[]above:(3c)},
+    right = of 3b,
+  ] (3c) {
     \begin{tikzpicture}[node distance=3pt]
       \node[
           rect=\green,
         ] (r1) at (0,0) {\vphantom{bg}green};
     \end{tikzpicture}
-  } edge (2d1);
+  } edge [next] (3b);
 
-  %%%
   \node[
     canvas,
-    label={[]above:(2d2)},
-    below right = of 2c,
-    xshift=+2pt,
-    yshift=-4pt,
-  ] (2d2) {
+    label={[]above:(3d)},
+    right = of 3c,
+  ] (3d) {
     \begin{tikzpicture}[node distance=3pt]
       \node[
           rect=\red,
         ] (r1) at (0,0) {\vphantom{bg}red};
     \end{tikzpicture}
-  } edge (2c);
+  } edge [next] (3c);
 
   \node[
     canvas,
-    label={[]above:(2e3)},
-    right = of 2d2,
-  ] (2e2) {
+    label={[]above:(3e)},
+    right = of 3d,
+  ] (3e) {
     \begin{tikzpicture}[node distance=3pt]
       \node[
           rect=\green,
         ] (r1) at (0,0) {\vphantom{bg}green};
     \end{tikzpicture}
-  } edge (2d2);
+  } edge [next] (3d);
 
-  \draw[casediv] ($(1a.south west)+(0,-6.9pt)$) -- ($(1e.south east)+(0,-6.9pt)$);
+  % one register, local undo
 
+  \node[
+    canvas,
+    label={[]above:(4a)},
+    below=\casemargin of 3a,
+  ] (4a) {
+    \begin{tikzpicture}[node distance=3pt]
+      \node[
+          rect=\black,
+        ] (r1) at (0,0) {\vphantom{bg}black};
+    \end{tikzpicture}
+  };
+
+  \node[
+    canvas,
+    label={[]above:(4b)},
+    right = of 4a,
+  ] (4b) {
+    \begin{tikzpicture}[node distance=3pt]
+      \node[
+          rect=\red,
+        ] (r1) at (0,0) {\vphantom{bg}red};
+    \end{tikzpicture}
+  } edge [next] (4a);
+
+  \node[
+    canvas,
+    label={[]above:(4c)},
+    right = of 4b,
+  ] (4c) {
+    \begin{tikzpicture}[node distance=3pt]
+      \node[
+          rect=\green,
+        ] (r1) at (0,0) {\vphantom{bg}green};
+    \end{tikzpicture}
+  } edge [next] (4b);
+
+  \node[
+    canvas,
+    label={[]above:(4d)},
+    right = of 4c,
+  ] (4d) {
+    \begin{tikzpicture}[node distance=3pt]
+      \node[
+          rect=\black,
+        ] (r1) at (0,0) {\vphantom{bg}black};
+    \end{tikzpicture}
+  } edge [next] (4c);
+
+  \node[
+    canvas,
+    label={[]above:(4e)},
+    right = of 4d,
+  ] (4e) {
+    \begin{tikzpicture}[node distance=3pt]
+      \node[
+          rect=\green,
+        ] (r1) at (0,0) {\vphantom{bg}green};
+    \end{tikzpicture}
+  } edge [next] (4d);
+
+  % one register, remote op blocks undo
+
+  \node[
+    canvas,
+    label={[]above:(5a)},
+    below=\casemargin of 4a,
+  ] (5a) {
+    \begin{tikzpicture}[node distance=3pt]
+      \node[
+          rect=\black,
+        ] (r1) at (0,0) {\vphantom{bg}black};
+    \end{tikzpicture}
+  };
+
+  \node[
+    canvas,
+    label={[]above:(5b)},
+    right = of 5a,
+  ] (5b) {
+    \begin{tikzpicture}[node distance=3pt]
+      \node[
+          rect=\red,
+        ] (r1) at (0,0) {\vphantom{bg}red};
+    \end{tikzpicture}
+  } edge [next] (5a);
+
+  \node[
+    canvas,
+    label={[]above:(5c)},
+    right = of 5b,
+  ] (5c) {
+    \begin{tikzpicture}[node distance=3pt]
+      \node[
+          rect=\green,
+        ] (r1) at (0,0) {\vphantom{bg}green};
+    \end{tikzpicture}
+  } edge [next] (5b);
+
+  \node[
+    canvas,
+    label={[]above:(5d)},
+    right = of 5c,
+  ] (5d) {
+    \begin{tikzpicture}[node distance=3pt]
+      \node[
+          rect=\green,
+        ] (r1) at (0,0) {\vphantom{bg}green};
+    \end{tikzpicture}
+  } edge [next] (5c);
+
+  \node[
+    canvas,
+    label={[]above:(5e)},
+    right = of 5d,
+  ] (5e) {
+    \begin{tikzpicture}[node distance=3pt]
+      \node[
+          rect=\green,
+        ] (r1) at (0,0) {\vphantom{bg}green};
+    \end{tikzpicture}
+  } edge [next] (5d);
+
+  % divider lines and ops
+
+  \coordinate (d1s) at ($(1a.north)!0.5!(1b.north)+(0,+\upperoffset)$);
+  \coordinate (d1e) at ($(5a.south)!0.5!(5b.south)+(0,0)$);
+
+  \coordinate (d2s) at ($(1b.north)!0.5!(1c.north)+(0,+\upperoffset)$);
+  \coordinate (d2e) at ($(5b.south)!0.5!(5c.south)+(0,0)$);
+
+  \coordinate (d3s) at ($(1c.north)!0.5!(1d.north)+(0,+\upperoffset)$);
+  \coordinate (d3e) at ($(5c.south)!0.5!(5d.south)+(0,0)$);
+
+  \coordinate (d4s) at ($(1d.north)!0.5!(1e.north)+(0,+\upperoffset)$);
+  \coordinate (d4e) at ($(5d.south)!0.5!(5e.south)+(0,0)$);
+
+  \draw[stepline] (d1s) -- (d1e);
+  \draw[stepline] (d2s) -- (d2e);
+  \draw[stepline] (d3s) -- (d3e);
+  \draw[stepline] (d4s) -- (d4e);
+
+  \draw (1b.north)+(-0.2cm,+\upperoffset) edge ["A set",optrans] ($(1a.north)+(0,+\upperoffset)$);
+  \draw (1c.north)+(-0.2cm,+\upperoffset) edge ["B set",optrans] ($(1b.north)+(0,+\upperoffset)$);
+  \draw (1d.north)+(-0.2cm,+\upperoffset) edge ["A undo",optrans] ($(1c.north)+(0,+\upperoffset)$);
+  \draw (1e.north)+(-0.2cm,+\upperoffset) edge ["A redo",optrans] ($(1d.north)+(0,+\upperoffset)$);
+
+  % case labels
+
+  \node[caselabel,above=\caselabeldist of 1c] {
+    (1) Two registers, global undo
+  };
+
+  \node[caselabel,above=\caselabeldist of 2c] {
+    (2) Two registers, local undo
+  };
+
+  \node[caselabel,above=\caselabeldist of 3c] {
+    (3) One register, global undo
+  };
+
+  \node[caselabel,above=\caselabeldist of 4c] {
+    (4) One register, local undo
+  };
+
+  \node[caselabel,above=\caselabeldist of 5c] {
+    (5) One register, remote operation blocks undo
+  };
+  
 \end{tikzpicture}
 \caption{
-  Different semantics of undo and redo with two users A and B.
-  The upper part (1a-1e) depicts behavior in case of two replicated registers
-  and the lower part (2a-2e) shows possible outcomes for one replicated register.
+  Different semantics of undo and redo with two users A and B collaboratively
+  editing one (two) register(s).
 }\label{fig:intro-example}
 \end{figure}
 
