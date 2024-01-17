@@ -115,7 +115,13 @@
 \usepackage{algpseudocodex}
 \newcommand{\algorithmautorefname}{Algorithm}
 \algrenewcommand\algorithmicforall{\textbf{for each}}
-\usepackage[noabbrev,nameinlink]{cleveref}
+\usepackage[noabbrev,nameinlink,capitalize]{cleveref}
+\newcounter{figcase}
+\renewcommand{\thefigcase}{(\alph{figcase})}
+\crefname{figcase}{case}{cases}
+\Crefname{figcase}{Case}{Cases}
+\creflabelformat{figcase}{#2#1#3}
+
 \usepackage{booktabs}
 
 \usepackage[acronym]{glossaries}
@@ -261,9 +267,9 @@ consistency~\cite{shapiro2011comprehensive}.
 As much as collaboration is a common feature today, so is undo and redo support.
 Integrating it with \glspl*{crdt} is not trivial.
 Although there are some published algorithms for undo and redo in \glspl*{crdt}
-(see \Cref{sec:related-work}),
+(see \cref{sec:related-work}),
 their semantics do not match the behavior of current mainstream applications
-as detailed in \Cref{sec:semantics}.
+as detailed in \cref{sec:semantics}.
 We believe the semantics of mainstream applications are more in line with
 user expectations for an undo feature, and therefore we propose an undo/redo
 algorithm for \glspl{crdt} that follows this mainstream behavior.
@@ -300,9 +306,6 @@ which is a JSON \gls*{crdt} that is based on \glspl*{mvr}.
       swap,
       black!70,
     },
-    casediv/.style={
-      black!70,
-    },
     next/.style={
       <-,
       >={Stealth[round]},
@@ -312,23 +315,24 @@ which is a JSON \gls*{crdt} that is based on \glspl*{mvr}.
       draw,
       fill=white,
       minimum width = 238.5pt,
+      % just for left align of text
+      text width=220pt,
     },
   }
 
   \def\black{black}
   \def\green{green!60!black}
   \def\red{red}
-  \def\upperoffset{38pt}
-  \def\loweroffset{300pt}
-  \def\casemargin{1.32cm}
-  \def\caselabeldist{17pt}
+  \def\upperoffset{28pt}
+  \def\casemargin{28pt}
+  \def\caselabeldist{5pt}
 
   % two registers, global undo
 
   \node[
     canvas,
-    label={[]above:(1a)},
-  ] (1a) at (c1) {
+    % label={[]above:(a1)},
+  ] (a1) at (c1) {
     \begin{tikzpicture}[node distance=3pt]
       \node[
           rect=\black,
@@ -342,9 +346,9 @@ which is a JSON \gls*{crdt} that is based on \glspl*{mvr}.
 
   \node[
     canvas,
-    label={[]above:(1b)},
-    right = of 1a,
-  ] (1b) {
+    % label={[]above:(a2)},
+    right = of a1,
+  ] (a2) {
     \begin{tikzpicture}[node distance=3pt]
       \node[
           rect=\red,
@@ -354,13 +358,13 @@ which is a JSON \gls*{crdt} that is based on \glspl*{mvr}.
           below = of r1,
         ] (r2) {\vphantom{bg}black};
     \end{tikzpicture}
-  } edge [next] (1a);
+  } edge [next] (a1);
 
   \node[
     canvas,
-    label={[]above:(1c)},
-    right = of 1b,
-  ] (1c) {
+    % label={[]above:(a3)},
+    right = of a2,
+  ] (a3) {
     \begin{tikzpicture}[node distance=3pt]
       \node[
           rect=\red,
@@ -370,13 +374,13 @@ which is a JSON \gls*{crdt} that is based on \glspl*{mvr}.
           below = of r1,
         ] (r2) {\vphantom{bg}green};
     \end{tikzpicture}
-  } edge [next] (1b);
+  } edge [next] (a2);
 
   \node[
     canvas,
-    label={[]above:(1d)},
-    right = of 1c,
-  ] (1d) {
+    % label={[]above:(a4)},
+    right = of a3,
+  ] (a4) {
     \begin{tikzpicture}[node distance=3pt]
       \node[
           rect=\red,
@@ -386,13 +390,13 @@ which is a JSON \gls*{crdt} that is based on \glspl*{mvr}.
           below = of r1,
         ] (r2) {\vphantom{bg}black};
     \end{tikzpicture}
-  } edge [next] (1c);
+  } edge [next] (a3);
 
   \node[
     canvas,
-    label={[]above:(1e)},
-    right = of 1d,
-  ] (1e) {
+    % label={[]above:(a5)},
+    right = of a4,
+  ] (a5) {
     \begin{tikzpicture}[node distance=3pt]
       \node[
           rect=\red,
@@ -402,15 +406,15 @@ which is a JSON \gls*{crdt} that is based on \glspl*{mvr}.
           below = of r1,
         ] (r2) {\vphantom{bg}green};
     \end{tikzpicture}
-  } edge [next] (1d);
+  } edge [next] (a4);
 
   % two registers, local undo
 
   \node[
     canvas,
-    label={[]above:(2a)},
-    below=\casemargin of 1a,
-  ] (2a) {
+    % label={[]above:(b1)},
+    below=\casemargin of a1,
+  ] (b1) {
     \begin{tikzpicture}[node distance=3pt]
       \node[
           rect=\black,
@@ -424,9 +428,9 @@ which is a JSON \gls*{crdt} that is based on \glspl*{mvr}.
 
   \node[
     canvas,
-    label={[]above:(2b)},
-    right = of 2a,
-  ] (2b) {
+    % label={[]above:(b2)},
+    right = of b1,
+  ] (b2) {
     \begin{tikzpicture}[node distance=3pt]
       \node[
           rect=\red,
@@ -436,13 +440,13 @@ which is a JSON \gls*{crdt} that is based on \glspl*{mvr}.
           below = of r1,
         ] (r2) {\vphantom{bg}black};
     \end{tikzpicture}
-  } edge [next] (2a);
+  } edge [next] (b1);
 
   \node[
     canvas,
-    label={[]above:(2c)},
-    right = of 2b,
-  ] (2c) {
+    % label={[]above:(b3)},
+    right = of b2,
+  ] (b3) {
     \begin{tikzpicture}[node distance=3pt]
       \node[
           rect=\red,
@@ -452,13 +456,13 @@ which is a JSON \gls*{crdt} that is based on \glspl*{mvr}.
           below = of r1,
         ] (r2) {\vphantom{bg}green};
     \end{tikzpicture}
-  } edge [next] (2b);
+  } edge [next] (b2);
 
   \node[
     canvas,
-    label={[]above:(2d)},
-    right = of 2c,
-  ] (2d) {
+    % label={[]above:(b4)},
+    right = of b3,
+  ] (b4) {
     \begin{tikzpicture}[node distance=3pt]
       \node[
           rect=\black,
@@ -468,13 +472,13 @@ which is a JSON \gls*{crdt} that is based on \glspl*{mvr}.
           below = of r1,
         ] (r2) {\vphantom{bg}green};
     \end{tikzpicture}
-  } edge [next] (2c);
+  } edge [next] (b3);
 
   \node[
     canvas,
-    label={[]above:(2e)},
-    right = of 2d,
-  ] (2e) {
+    % label={[]above:(b5)},
+    right = of b4,
+  ] (b5) {
     \begin{tikzpicture}[node distance=3pt]
       \node[
           rect=\red,
@@ -484,14 +488,14 @@ which is a JSON \gls*{crdt} that is based on \glspl*{mvr}.
           below = of r1,
         ] (r2) {\vphantom{bg}green};
     \end{tikzpicture}
-  } edge [next] (2d);
+  } edge [next] (b4);
 
   % one register, global undo
 
   \node[
     canvas,
-    label={[]above:(3a)},
-    below=\casemargin of 2a,
+    % label={[]above:(3a)},
+    below=\casemargin of b1,
   ] (3a) {
     \begin{tikzpicture}[node distance=3pt]
       \node[
@@ -502,9 +506,9 @@ which is a JSON \gls*{crdt} that is based on \glspl*{mvr}.
 
   \node[
     canvas,
-    label={[]above:(3b)},
+    % label={[]above:(c2)},
     right = of 3a,
-  ] (3b) {
+  ] (c2) {
     \begin{tikzpicture}[node distance=3pt]
       \node[
           rect=\red,
@@ -514,47 +518,47 @@ which is a JSON \gls*{crdt} that is based on \glspl*{mvr}.
 
   \node[
     canvas,
-    label={[]above:(3c)},
-    right = of 3b,
-  ] (3c) {
+    % label={[]above:(c3)},
+    right = of c2,
+  ] (c3) {
     \begin{tikzpicture}[node distance=3pt]
       \node[
           rect=\green,
         ] (r1) at (0,0) {\vphantom{bg}green};
     \end{tikzpicture}
-  } edge [next] (3b);
+  } edge [next] (c2);
 
   \node[
     canvas,
-    label={[]above:(3d)},
-    right = of 3c,
-  ] (3d) {
+    % label={[]above:(c4)},
+    right = of c3,
+  ] (c4) {
     \begin{tikzpicture}[node distance=3pt]
       \node[
           rect=\red,
         ] (r1) at (0,0) {\vphantom{bg}red};
     \end{tikzpicture}
-  } edge [next] (3c);
+  } edge [next] (c3);
 
   \node[
     canvas,
-    label={[]above:(3e)},
-    right = of 3d,
-  ] (3e) {
+    % label={[]above:(c5)},
+    right = of c4,
+  ] (c5) {
     \begin{tikzpicture}[node distance=3pt]
       \node[
           rect=\green,
         ] (r1) at (0,0) {\vphantom{bg}green};
     \end{tikzpicture}
-  } edge [next] (3d);
+  } edge [next] (c4);
 
   % one register, local undo
 
   \node[
     canvas,
-    label={[]above:(4a)},
+    % label={[]above:(d1)},
     below=\casemargin of 3a,
-  ] (4a) {
+  ] (d1) {
     \begin{tikzpicture}[node distance=3pt]
       \node[
           rect=\black,
@@ -564,45 +568,45 @@ which is a JSON \gls*{crdt} that is based on \glspl*{mvr}.
 
   \node[
     canvas,
-    label={[]above:(4b)},
-    right = of 4a,
-  ] (4b) {
+    % label={[]above:(d2)},
+    right = of d1,
+  ] (d2) {
     \begin{tikzpicture}[node distance=3pt]
       \node[
           rect=\red,
         ] (r1) at (0,0) {\vphantom{bg}red};
     \end{tikzpicture}
-  } edge [next] (4a);
+  } edge [next] (d1);
 
   \node[
     canvas,
-    label={[]above:(4c)},
-    right = of 4b,
-  ] (4c) {
+    % label={[]above:(d3)},
+    right = of d2,
+  ] (d3) {
     \begin{tikzpicture}[node distance=3pt]
       \node[
           rect=\green,
         ] (r1) at (0,0) {\vphantom{bg}green};
     \end{tikzpicture}
-  } edge [next] (4b);
+  } edge [next] (d2);
 
   \node[
     canvas,
-    label={[]above:(4d)},
-    right = of 4c,
+    % label={[]above:(4d)},
+    right = of d3,
   ] (4d) {
     \begin{tikzpicture}[node distance=3pt]
       \node[
           rect=\black,
         ] (r1) at (0,0) {\vphantom{bg}black};
     \end{tikzpicture}
-  } edge [next] (4c);
+  } edge [next] (d3);
 
   \node[
     canvas,
-    label={[]above:(4e)},
+    % label={[]above:(d4)},
     right = of 4d,
-  ] (4e) {
+  ] (d4) {
     \begin{tikzpicture}[node distance=3pt]
       \node[
           rect=\green,
@@ -614,9 +618,9 @@ which is a JSON \gls*{crdt} that is based on \glspl*{mvr}.
 
   \node[
     canvas,
-    label={[]above:(5a)},
-    below=\casemargin of 4a,
-  ] (5a) {
+    % label={[]above:(e1)},
+    below=\casemargin of d1,
+  ] (e1) {
     \begin{tikzpicture}[node distance=3pt]
       \node[
           rect=\black,
@@ -626,96 +630,96 @@ which is a JSON \gls*{crdt} that is based on \glspl*{mvr}.
 
   \node[
     canvas,
-    label={[]above:(5b)},
-    right = of 5a,
-  ] (5b) {
+    % label={[]above:(e2)},
+    right = of e1,
+  ] (e2) {
     \begin{tikzpicture}[node distance=3pt]
       \node[
           rect=\red,
         ] (r1) at (0,0) {\vphantom{bg}red};
     \end{tikzpicture}
-  } edge [next] (5a);
+  } edge [next] (e1);
 
   \node[
     canvas,
-    label={[]above:(5c)},
-    right = of 5b,
-  ] (5c) {
+    % label={[]above:(e3)},
+    right = of e2,
+  ] (e3) {
     \begin{tikzpicture}[node distance=3pt]
       \node[
           rect=\green,
         ] (r1) at (0,0) {\vphantom{bg}green};
     \end{tikzpicture}
-  } edge [next] (5b);
+  } edge [next] (e2);
 
   \node[
     canvas,
-    label={[]above:(5d)},
-    right = of 5c,
-  ] (5d) {
+    % label={[]above:(e4)},
+    right = of e3,
+  ] (e4) {
     \begin{tikzpicture}[node distance=3pt]
       \node[
           rect=\green,
         ] (r1) at (0,0) {\vphantom{bg}green};
     \end{tikzpicture}
-  } edge [next] (5c);
+  } edge [next] (e3);
 
   \node[
     canvas,
-    label={[]above:(5e)},
-    right = of 5d,
-  ] (5e) {
+    % label={[]above:(e5)},
+    right = of e4,
+  ] (e5) {
     \begin{tikzpicture}[node distance=3pt]
       \node[
           rect=\green,
         ] (r1) at (0,0) {\vphantom{bg}green};
     \end{tikzpicture}
-  } edge [next] (5d);
+  } edge [next] (e4);
 
   % divider lines and ops
 
-  \coordinate (d1s) at ($(1a.north)!0.5!(1b.north)+(0,+\upperoffset)$);
-  \coordinate (d1e) at ($(5a.south)!0.5!(5b.south)+(0,0)$);
+  \coordinate (d1s) at ($(a1.north)!0.5!(a2.north)+(0,+\upperoffset)$);
+  \coordinate (da5) at ($(e1.south)!0.5!(e2.south)+(0,0)$);
 
-  \coordinate (d2s) at ($(1b.north)!0.5!(1c.north)+(0,+\upperoffset)$);
-  \coordinate (d2e) at ($(5b.south)!0.5!(5c.south)+(0,0)$);
+  \coordinate (d2s) at ($(a2.north)!0.5!(a3.north)+(0,+\upperoffset)$);
+  \coordinate (db5) at ($(e2.south)!0.5!(e3.south)+(0,0)$);
 
-  \coordinate (d3s) at ($(1c.north)!0.5!(1d.north)+(0,+\upperoffset)$);
-  \coordinate (d3e) at ($(5c.south)!0.5!(5d.south)+(0,0)$);
+  \coordinate (d3s) at ($(a3.north)!0.5!(a4.north)+(0,+\upperoffset)$);
+  \coordinate (dc5) at ($(e3.south)!0.5!(e4.south)+(0,0)$);
 
-  \coordinate (d4s) at ($(1d.north)!0.5!(1e.north)+(0,+\upperoffset)$);
-  \coordinate (d4e) at ($(5d.south)!0.5!(5e.south)+(0,0)$);
+  \coordinate (d4s) at ($(a4.north)!0.5!(a5.north)+(0,+\upperoffset)$);
+  \coordinate (dd4) at ($(e4.south)!0.5!(e5.south)+(0,0)$);
 
-  \draw[stepline] (d1s) -- (d1e);
-  \draw[stepline] (d2s) -- (d2e);
-  \draw[stepline] (d3s) -- (d3e);
-  \draw[stepline] (d4s) -- (d4e);
+  \draw[stepline] (d1s) -- (da5);
+  \draw[stepline] (d2s) -- (db5);
+  \draw[stepline] (d3s) -- (dc5);
+  \draw[stepline] (d4s) -- (dd4);
 
-  \draw (1b.north)+(-0.2cm,+\upperoffset) edge ["A set",optrans] ($(1a.north)+(0,+\upperoffset)$);
-  \draw (1c.north)+(-0.2cm,+\upperoffset) edge ["B set",optrans] ($(1b.north)+(0,+\upperoffset)$);
-  \draw (1d.north)+(-0.2cm,+\upperoffset) edge ["A undo",optrans] ($(1c.north)+(0,+\upperoffset)$);
-  \draw (1e.north)+(-0.2cm,+\upperoffset) edge ["A redo",optrans] ($(1d.north)+(0,+\upperoffset)$);
+  \draw (a2.north)+(-0.2cm,+\upperoffset) edge ["A set",optrans] ($(a1.north)+(0,+\upperoffset)$);
+  \draw (a3.north)+(-0.2cm,+\upperoffset) edge ["B set",optrans] ($(a2.north)+(0,+\upperoffset)$);
+  \draw (a4.north)+(-0.2cm,+\upperoffset) edge ["A undo",optrans] ($(a3.north)+(0,+\upperoffset)$);
+  \draw (a5.north)+(-0.2cm,+\upperoffset) edge ["A redo",optrans] ($(a4.north)+(0,+\upperoffset)$);
 
   % case labels
 
-  \node[caselabel,above=\caselabeldist of 1c] {
-    (1) Two registers, global undo
+  \node[caselabel,above=\caselabeldist of a3] {
+    \refstepcounter{figcase}\label{fig:two-reg-global}\thefigcase{} Two registers, global undo
   };
 
-  \node[caselabel,above=\caselabeldist of 2c] {
-    (2) Two registers, local undo
+  \node[caselabel,above=\caselabeldist of b3] {
+    \refstepcounter{figcase}\label{fig:two-reg-local}\thefigcase{} Two registers, local undo
   };
 
-  \node[caselabel,above=\caselabeldist of 3c] {
-    (3) One register, global undo
+  \node[caselabel,above=\caselabeldist of c3] {
+    \refstepcounter{figcase}\label{fig:one-reg-global}\thefigcase{} One register, global undo
   };
 
-  \node[caselabel,above=\caselabeldist of 4c] {
-    (4) One register, local undo
+  \node[caselabel,above=\caselabeldist of d3] {
+    \refstepcounter{figcase}\label{fig:one-reg-local}\thefigcase{} One register, local undo
   };
 
-  \node[caselabel,above=\caselabeldist of 5c] {
-    (5) One register, remote operation blocks undo
+  \node[caselabel,above=\caselabeldist of e3] {
+    \refstepcounter{figcase}\label{fig:one-reg-block}\thefigcase{} One register, remote operation blocks undo
   };
   
 \end{tikzpicture}
@@ -726,128 +730,92 @@ which is a JSON \gls*{crdt} that is based on \glspl*{mvr}.
 \end{figure}
 
 To illustrate the possible semantics of undo and redo with multiple users,
-we introduce two scenarios.
-In both scenarios, we consider replicated registers that are used to store
-the fill color of a rectangle, which exists, for instance, on a slide of
-a presentation deck.
-The rectangle's color is stored in a \gls*{lwwr}~\cite{shapiro2011comprehensive}.
-If multiple users concurrently set its color, the register picks one of
-the concurrently assigned colors arbitrarily as the merged final state.
-\Cref{fig:intro-example} illustrates the two scenarios showing different outcomes
-of undo and redo over the same sequence of operations:
-First, $A$ sets the color of a rectangle to red and then $B$ sets the color to
-green. Afterwards, $A$ performs an undo followed by a redo.
-The difference between the upper scenario (1a-1e) and the lower scenario (2a-2e)
-is that in the former, $A$ and $B$ do not work on the same register:
-$A$ works exclusively on the upper rectangle and $B$ on the lower one.
-In the lower scenario, $A$ and $B$ collaborate on the same rectangle.
-All operations are immediately synced to the other user before another change
-is introduced, avoiding concurrency for now.
-Hence, both users have seen the same progression of colors.
+we consider replicated registers that are used to store the fill color
+of a rectangle, for instance, on a slide of a presentation deck.
+\cref{fig:intro-example} illustrates possible behaviors of undo and redo.
+\Cref{fig:two-reg-global,fig:two-reg-local} deal with an application 
+with two registers (rectangles) and
+\Cref{fig:one-reg-global,fig:one-reg-local,fig:one-reg-block} show an
+application with one register. 
+We assume that all operations are instantly synced to the other peer and the
+operations run sequentially, disregarding concurrency for now.
+We distinguish between the following undo behaviors:
 
-In the upper scenario (1a-1e), the undo operation by $A$ restores the color of
-the upper rectangle to black and the redo operation restores the color to red.
-This appears to be the most intuitive behavior of undo and redo as an undo is
-usually intended to reverse the user's last own change because of a mistake.
-Moreover, this behavior does not interfere with $B$'s green coloring of the
-lower rectangle which $A$ did not touch at all.
-Another approach would be that $A$'s undo operation restores the color of the
-lower rectangle to black and the redo operation restores the color back to green.
-This would undo the last change of any user at the time of issuing the undo.
-However, this behavior may be confusing to users especially if 
-the two rectangles are not on the same slide but on different ones.
-$A$ may be surprised to see no immediate effect of her undo because it reverted
-$B$'s green coloring on a slide $A$ is currently not looking at,
-while actually expecting her last change to be undone.
-On the other hand, $B$ may surprised to learn that her last
-change was undone for no obvious reason.
-Therefore, we favor the first approach.
+\textbf{Global undo.}
+In \cref{fig:intro-example}~\ref{fig:two-reg-global},
+user $A$ changes the upper rectangle's color
+to red, then user $B$ sets the lower rectangle's color to green.
+When $A$ subsequently performs an undo, it undoes the most recent operation
+\emph{by any user}, i.e., it undoes $B$'s operation by setting the lower
+rectangle back to black.
+$A$'s redo operation restores the lower rectangle to green.
 
-The lower scenario (2a-2e) gives rise to different possible outcomes which may
-not look intuitive at first sight.
-$A$'s undo operation can either:
+\Cref{fig:one-reg-global} shows the analogous scenario in which user $A$
+and $B$ update the same rectangle.
+When $A$ performs an undo, it undoes the most recent operation
+again \emph{by any user}, changing the rectangle from green back to red.
 
-\begin{enumerate}
-  \item Restore the color of the rectangle to black
-    ((2d1) in \Cref{fig:intro-example}; \textbf{local undo})
-  \item Restore the color of the rectangle to red
-    ((2d2) in \Cref{fig:intro-example}; \textbf{global undo})
-  \item Be not allowed at all (not shown in \Cref{fig:intro-example})
-\end{enumerate}
+\textbf{Local undo.}
+In \cref{fig:intro-example}~\ref{fig:two-reg-global},
+user $A$ changes the upper rectangle to red,
+then user $B$ sets the lower rectangle to green.
+Afterwards, user $A$ performs an undo, which undoes the most recent operation
+\emph{by $A$ itself}, i.e., changing the upper rectangle back to black.
+$A$'s subsequent redo restores the upper rectangle back to red.
 
-We call the first approach \emph{local undo} because it undoes the last
-operation that was performed by the user who issues the undo.
-In case operations by other users fall temporally in between the last
-local operation and the undo operation, their effects are skipped
-($B$'s green coloring in (2c)).
-The second approach is called \emph{global undo} because it undoes
-the last operation that was performed by \emph{any} user.
+In \Cref{fig:one-reg-local}, there is only one rectangle.
+First, user $A$ changes it to red, then user $B$ changes it to green.
+Subsequently, $A$ performs an undo, and like in the two-register case, this
+restores the value of the register to the state before the most recent operation
+\emph{by $A$ itself}, i.e., changing it back to black.
+When then $A$ performs its redo, the state prior to the undo is restored, i.e.,
+green.
 
-The effect of $A$'s subsequent redo operation depends on the used undo behavior.
-If undo was not allowed, the redo operation is not possible.
-With global undo behavior, $A$'s redo operation only has one choice:
-to restore the color of the rectangle back to green (2e3).
-In case local undo behavior is used, $A$'s redo operation can either:
+\textbf{Remote operation blocks undo.}
+In \cref{fig:intro-example}~\ref{fig:one-reg-block}, if user $A$ tries to
+perform an undo in a state where the most recent operation is by a different user,
+the undo function is disabled for $A$.
 
-\begin{enumerate}
-  \item Restore the color of the rectangle to red
-    ((2e1) in \Cref{fig:intro-example}; \textbf{local redo})
-  \item Restore the color of the rectangle to green
-    ((2e2) in \Cref{fig:intro-example}; \textbf{global redo})
-\end{enumerate}
+To sum it up, \emph{local undo} undoes the last operation
+performed by the same user who issues the undo.
+On the other hand, \emph{global undo} undoes the last operation
+performed by any user.
+In any case, however, a redo restores to the state prior to its corresponding undo,
+regardless of the origin of the operations that constitute this state.
 
-Similarly, we call the first approach \emph{local redo} because it redoes the
-effect of the undone operation from the user who issues both the undo and the redo.
-The second approach is called \emph{global redo} because it restores to the
-state prior to the undo operation, regardless of the origin of the
-operations that constitute this state.
+%% no concurrency for now
+% The rectangle's color is stored in a \gls*{lwwr}~\cite{shapiro2011comprehensive}.
+% If multiple users concurrently set its color, the register picks one of
+% the concurrently assigned colors arbitrarily as the merged final state.
+% The difference between the upper scenario (1a-1e) and the lower scenario (2a-2e)
+% is that in the former, $A$ and $B$ do not work on the same register:
+% $A$ works exclusively on the upper rectangle and $B$ on the lower one.
+% In the lower scenario, $A$ and $B$ collaborate on the same rectangle.
+% All operations are immediately synced to the other user before another change
+% is introduced, avoiding concurrency for now.
+% Hence, both users have seen the same progression of colors.
 
-To determine the desired behavior of undo and redo with multiple users,
-we took inspiration from existing systems which have presumably conducted
-studies to learn what behavior users expect.
-Hence, we surveyed the behavior of undo and redo in Google Sheets, Google Slides,
+%% software survey
+
+We tested the behavior of undo and redo in Google Sheets, Google Slides,
 Microsoft Excel Online, Microsoft PowerPoint Online, Figma and Miro Boards.
-For canvas-based applications, namely Google Slides, Microsoft PowerPoint Online,
-Figma and Miro Boards, the setup is just like the lower scenario in
-\Cref{fig:intro-example} and over the same sequence of operations.
-For spreadsheet-based applications, namely Google Sheets and Microsoft Excel Online,
-the behavior of replicated registers is derived from the value of a single cell
-in the spreadsheet.
-However, instead of recoloring a rectangle, the value of the cell is incremented
-in turns by the two users $A$ and $B$, starting from zero.
-
-All applications exhibit local undo and global redo behavior
-except for Miro Boards.
-It makes undo impossible every time an operation by another user is
-received, settling on the third undo approach.
-We suspect that this was a deliberately chosen trade-off between
-user experience and implementation simplicity in favor of the latter.
-Hence, we do not consider this behavior any further.
-We follow the approach of mainstream collaboration software for two reasons:
-First, the local undo and global redo behavior is consistent with our
-findings from the two-register scenario in \Cref{fig:intro-example}.
-To maintain a consistent user experience, we favor similar semantics
-regardless of the number of registers involved.
-Second, global undo implicitly assumes that a user is aware of all remote changes
-but the strongest assumption we can reasonably make is to assume that she is aware
-of her own changes.
-Moreover, global undo poses some additional challenges in an eventually
-consistent setting that are described in \Cref{adx:global-undo-challenges}.
-The fact that these challenges do not arise in collaborative
-software that can afford a central server and online clients,
-yet none of them chose to implement global undo, makes a strong
-case to follow their lead.
-We derive the following principles for undo and redo in a collaborative
-setting:
+In spreadsheets (Google Sheets and Microsoft Excel Online)
+we test a register by setting the value of a single cell instead of recoloring
+a rectangle.
+All applications we tested exhibit local undo behavior as shown in
+\cref{fig:intro-example}~\ref{fig:two-reg-local}~and~\ref{fig:one-reg-local},
+except for Miro Boards, which blocks undo every time an operation
+by another user is received, as illustrated
+in \cref{fig:intro-example}~\ref{fig:one-reg-block}.
+The most common implementations of multi-user undo for a register
+can be characterized by the following principles:
 
 \begin{itemize}
   \item \textbf{Local undo}:
     An undo by a user undoes her own last operation on a register,
     thereby possibly also undoing operations by other users on that register,
-    if they lie temporally in between her last operation and the undo operation.
-  \item \textbf{Global redo}:
-    A redo restores the register to the state prior to its corresponding undo,
-    regardless of the origin of the operations that constitute that state.
+    if they lie temporally in between her last operation and the time of
+    issuing the undo.
   \item \textbf{Undo Redo Neutrality}~\cite{figma2019multiplayer}:
     Assume a register is in state $s$.
     A sequence of $n$ undo operations followed by a sequence of $n$ redo operations
@@ -855,11 +823,48 @@ setting:
 \end{itemize}
 
 The last principle captures a common usage pattern of undo and redo.
-Often users want to look at a past version and then restore to the most
-recent version without changing anything.
+Often users want to look at a past version of a document and then restore
+to the most recent version without changing anything.
 
-% Assume a merge operation that merges $k$ branches into just one branch.
-% Undoing that merge operation, should restore the $k$ previous siblings, too.
+%% argue for local instead of global undo behavior
+
+We think that most applications settled for local undo behavior because
+global undo implicitly assumes users being aware of remote changes, too,
+all while editing a document, and this is a fairly strong assumption to make.
+\Cref{fig:intro-example}~\ref{fig:two-reg-global} demonstrates this issue
+if we think about the two registers living in different parts of a document,
+e.g., the upper rectangle is on a slide user $A$ is currently looking at
+and the lower rectangle is on a different slide user $B$ is editing.
+With global undo, $A$ may be surprised to see no immediate effect of her undo
+because it reverted $B$'s green coloring on a different slide,
+while actually expecting her last change to be undone for fixing
+an accidental change of hers.
+On the other hand, $B$ may surprised to learn that her last
+change was undone for no obvious reason.
+With more users editing collaboratively, the problem exacerbates, as the
+share of remote operations tends to increase with the number of users.
+Hence, we are convinced that the strongest reasonable assumption is to
+assume that users are aware of their own changes.
+Since we think that users favor predictable and consistent semantics,
+undo behavior with one register should follow local undo behavior as well and
+not depend on the number of registers involved.
+
+Furthermore, global undo in a \gls{crdt} context suffers from additional problems.
+It is possible that multiple users concurrently undo or redo overlapping subsets
+of operations, leading to potentially confusing states.
+Local undo does not suffer from this problem, since users can only undo 
+their own operations.
+Finally, global undo presumes that users agree on a total order of operations.
+If the total order is determined by (logical) timestamps on operations,
+this order is cannot be final.
+Then, it is possible that a user undoes the operations
+it knows in some timestamp interval $[t_1, t_2]$, and subsequently receives
+a remote operation with a timestamp $t_{op}$ that falls within the
+interval ($t_1 < t_{op} < t_2$).
+It is unclear how an algorithm should handle this situation without leading
+to further unexpected states.
+The fact that most non-\gls{crdt} software chooses local undo over global undo
+despite not being affected by this, makes another case for following their lead.
 
 \section{Background on MVRs}\label{sec:background}
 
@@ -1258,7 +1263,7 @@ The \opidtrace{}'s last element is always an \gls*{opid} from a terminal operati
 and any preceding element is an \gls*{opid} from a \restopkind{}.
 The processing order of heads and predecessors in the \textit{todo} list
 is not relevant for correctness as every terminal head is sorted later in
-\Cref{alg:gen-values,alg:comparison-fn}.
+\cref{alg:gen-values,alg:comparison-fn}.
 
 The reason for the differentiation between terminal operations and
 \restopkind{}s is that a \restopkind{} may contribute multiple values to
@@ -1292,7 +1297,7 @@ see when discussing \autoref{alg:comparison-fn}.
 given a list of terminal heads consisting of pairs of terminal operations and
 \opidtrace{}s.
 First, it sorts the terminal heads by their \opidtrace{}
-in descending order in line 2 using \Cref{alg:comparison-fn}.
+in descending order in line 2 using \cref{alg:comparison-fn}.
 Then, it filter maps the sorted terminal heads to their value(s) in lines 3-7.
 In case of a deletion (\setopkind{} with no value supplied),
 the corresponding terminal head is skipped and no value is produced.
@@ -1314,7 +1319,7 @@ the corresponding terminal head is skipped and no value is produced.
 \end{algorithm}
 
 \Cref{alg:comparison-fn} provides the comparison logic of two \opidtrace{}s
-when sorting the list of terminal heads in line 2 of \Cref{alg:gen-values}.
+when sorting the list of terminal heads in line 2 of \cref{alg:gen-values}.
 The \textit{zip()} function takes two lists and returns a list of pairs
 where the first element of the pair is from the first list and the second
 element is from the second list.
@@ -1386,7 +1391,7 @@ undo and redo operations. For clarity, undo and redo operations are not labeled
 as \restopkind{}s. Their respective anchor operations are indicated by the
 dashed blue arrows and denoted in parenthesis.
 The dotted lines indicate time steps during which we show the nodes' states in
-\Cref{tab:node-states}.
+\cref{tab:node-states}.
 }\label{fig:op-hist-undo-redo}
 \end{figure*}
 
@@ -1474,7 +1479,7 @@ The dotted lines indicate time steps during which we show the nodes' states in
   \end{tabular}
 \caption{
 The internal states of the nodes' undo and redo stacks and the values of the register
-at the time steps from \Cref{fig:op-hist-undo-redo}.
+at the time steps from \cref{fig:op-hist-undo-redo}.
 A set operation is abbreviated by $\mathit{\setabbr}$ and a restore operation
 by $\mathit{\restabbr}$
 with its anchor operation denoted within parenthesis.
@@ -1489,10 +1494,10 @@ At all other time steps the operations are assumed to be synced.
 \Cref{fig:op-hist-undo-redo} shows an operation history that is replicated
 between two actors $A$ and $B$ that contains undo and redo operations.
 \Cref{tab:node-states} shows the internal node states during the time steps
-from \Cref{fig:op-hist-undo-redo}.
-It demonstrates the stack maintenance introduced in \Cref{sec:overview} and
+from \cref{fig:op-hist-undo-redo}.
+It demonstrates the stack maintenance introduced in \cref{sec:overview} and
 shows the register's values produced by
-\Cref{alg:core-alg,alg:gen-values,alg:comparison-fn} which are applied on top
+\cref{alg:core-alg,alg:gen-values,alg:comparison-fn} which are applied on top
 of the respective operation histories at the time steps.
 Steps (2a) and (2b) point out how two concurrent undo operations are resolved.
 \undop{5}{A}{3}{A} produces the value $2$ with an \opidtrace{} of
@@ -1533,7 +1538,7 @@ First, the predecessors of an operation remain constant after their generation.
 Incoming concurrent operations may have existing operations as their predecessors
 but they never update the predecessors of existing operations.
 Second, a \restopkind{}'s anchor is also fixed at generation time.
-As explained in \Cref{sec:evaluation}, there are degenerate cases in which after
+As explained in \cref{sec:evaluation}, there are degenerate cases in which after
 following the anchor and resolving its predecessors, one predecessor is another
 \restopkind{} and the same pattern repeats for a few iterations,
 leading to a non-constant runtime.
@@ -1592,13 +1597,13 @@ Finally, we discuss its integration with Automerge.
 We demonstrate that any two replicas that have received the same set of
 operations converge to the same state.
 The same set of operations produce the same operation history on both
-replicas over which the algorithms from \Cref{sec:implementation} are applied.
+replicas over which the algorithms from \cref{sec:implementation} are applied.
 Since the algorithms are deterministic and do not depend on the order in which
 operations were received, they produce the same value(s) on both
 replicas, given that they terminate.
 \Cref{alg:gen-values}'s termination is trivial since it sorts and then
 maps a finite set of operations.
-The termination of the comparison function from \Cref{alg:comparison-fn} is
+The termination of the comparison function from \cref{alg:comparison-fn} is
 guaranteed by the fact that \opidtrace{}s are finite
 (due to the operation history being finite).
 \Cref{alg:core-alg}'s termination is a bit more involved.
@@ -1617,7 +1622,7 @@ Therefore, the algorithm converges to the same state on both replicas.
 The reference implementation is written in Typescript and consists of around 350
 lines of code (excluding comments and blank lines),
 implementing an \gls*{mvr} with undo and redo functionality as described
-in \Cref{sec:background,sec:overview,sec:implementation}.
+in \cref{sec:background,sec:overview,sec:implementation}.
 The implementation is tested against a set of unit tests that covers important
 scenarios, both in single-user and multi-user cases.
 In total there are 30 unit tests,
@@ -1625,7 +1630,7 @@ comprising of around 640 lines of test code (also excluding comments and blank l
 
 \textbf{Performance}.
 \autoref{alg:gen-values}'s runtime is entirely driven by the
-complexity of sorting the terminal operations and \Cref{alg:comparison-fn}'s
+complexity of sorting the terminal operations and \cref{alg:comparison-fn}'s
 runtime is linear in the length of the shorter \opidtrace{}.
 To assess \autoref{alg:core-alg}'s runtime,
 we look at the runtime of resolving the different operation kinds,
@@ -1681,7 +1686,7 @@ More importantly, we think that neither alternating undo and redo
 nor set and undo operations is a common use case.
 
 Benchmarks of our reference implementation support these findings.
-\Cref{fig:runtime-cons-undo-redo} and \Cref{fig:runtime-undo-redo-alt} measure
+\Cref{fig:runtime-cons-undo-redo} and \cref{fig:runtime-undo-redo-alt} measure
 the runtime in two different scenarios for undo and redo.
 Each data point shows the mean runtime over 1024 runs.
 The benchmarking was conducted on a 2019 MacBook Pro with a 
@@ -1831,7 +1836,7 @@ The benchmarking was conducted on a 2019 MacBook Pro with a
 \end{figure}
 
 \Cref{fig:runtime-cons-undo-redo} covers the undo-redo-neutrality principle
-from \Cref{sec:semantics}.
+from \cref{sec:semantics}.
 For undo operations, the mean runtime of generating and applying an undo
 operation is shown with $n-1$ preceding undo operations
 which are in turn preceded by $n$ set operations, for $n \in \{1,2,\ldots,50\}$.
@@ -1896,14 +1901,14 @@ as opposed to just two iterations for an undo operation.
 \caption{
   Runtime of the last undo/redo operation
   in a sequence of alternating undo-redo operations of length $n$
-  (counting one undo-redo-pair as one; see \Cref{fig:degenerate-op-sequence}).
+  (counting one undo-redo-pair as one; see \cref{fig:degenerate-op-sequence}).
 }\label{fig:runtime-undo-redo-alt}
 \end{figure}
 
 \Cref{fig:runtime-undo-redo-alt} illustrates the mean runtime of the last
 undo or redo operation of a sequence of alternating undo-redo operations
 of length $n$ for $n \in \{200, 400, 600, 800\}$.
-This scenario resembles \Cref{fig:degenerate-op-sequence}, but with longer sequences,
+This scenario resembles \cref{fig:degenerate-op-sequence}, but with longer sequences,
 and measures the time to generate and apply the head of the sequence.
 As previously discussed, the runtime of undo operations is constant in this
 scenario and not affected by the length of the sequence.
@@ -1972,9 +1977,9 @@ If it is even, the operation is visible, otherwise it is not.
 When merging conflicting counters of an operation, the maximum is used.
 Yet, counter-based approaches handle undo only for a single operation
 and do not allow skipping over remote operations, which is required
-for local undo behavior as we pointed out in \Cref{sec:semantics}.
-To illustrate this we consider \Cref{fig:anti-counter}.
-It resembles the single-register scenario in \Cref{fig:intro-example} but
+for local undo behavior as we pointed out in \cref{sec:semantics}.
+To illustrate this we consider \cref{fig:anti-counter}.
+It resembles the single-register scenario in \cref{fig:intro-example} but
 instead of $A$ redoing in the last step, $B$ issues an undo.
 \Cref{fig:anti-counter} shows the correct outcomes according to local undo
 behavior.
@@ -2025,31 +2030,30 @@ for implementing local undo.
   \def\green{green!60!black}
   \def\red{red}
   \def\upperoffset{8pt}
-  \def\loweroffset{40pt}
 
-  %%%%
+  % divider lines and ops
 
-  \coordinate (d1s) at ($(1a.north)!0.5!(1b.north)+(0,+\upperoffset)$);
-  \coordinate (d1e) at ($(1a.north)!0.5!(1b.north)+(0,-\loweroffset)$);
+  \coordinate (d1s) at ($(a1.north)!0.5!(a2.north)+(0,+\upperoffset)$);
+  \coordinate (da5) at ($(e1.south)!0.5!(e2.south)+(0,0)$);
 
-  \coordinate (d2s) at ($(1b.north)!0.5!(1c.north)+(0,+\upperoffset)$);
-  \coordinate (d2e) at ($(1b.north)!0.5!(1c.north)+(0,-\loweroffset)$);
+  \coordinate (d2s) at ($(a2.north)!0.5!(a3.north)+(0,+\upperoffset)$);
+  \coordinate (db5) at ($(e2.south)!0.5!(e3.south)+(0,0)$);
 
-  \coordinate (d3s) at ($(1c.north)!0.5!(1d.north)+(0,+\upperoffset)$);
-  \coordinate (d3e) at ($(1c.north)!0.5!(1d.north)+(0,-\loweroffset)$);
+  \coordinate (d3s) at ($(a3.north)!0.5!(a4.north)+(0,+\upperoffset)$);
+  \coordinate (dc5) at ($(e3.south)!0.5!(e4.south)+(0,0)$);
 
-  \coordinate (d4s) at ($(1d.north)!0.5!(1e.north)+(0,+\upperoffset)$);
-  \coordinate (d4e) at ($(1d.north)!0.5!(1e.north)+(0,-\loweroffset)$);
+  \coordinate (d4s) at ($(a4.north)!0.5!(a5.north)+(0,+\upperoffset)$);
+  \coordinate (dd4) at ($(e4.south)!0.5!(e5.south)+(0,0)$);
 
-  \draw[stepline] (d1s) -- (d1e);
-  \draw[stepline] (d2s) -- (d2e);
-  \draw[stepline] (d3s) -- (d3e);
-  \draw[stepline] (d4s) -- (d4e);
+  \draw[stepline] (d1s) -- (da5);
+  \draw[stepline] (d2s) -- (db5);
+  \draw[stepline] (d3s) -- (dc5);
+  \draw[stepline] (d4s) -- (dd4);
 
-  \draw (1b.north)+(-0.2cm,+\upperoffset) edge ["A set",optrans] ($(1a.north)+(0,+\upperoffset)$);
-  \draw (1c.north)+(-0.2cm,+\upperoffset) edge ["B set",optrans] ($(1b.north)+(0,+\upperoffset)$);
-  \draw (1d.north)+(-0.2cm,+\upperoffset) edge ["A undo",optrans] ($(1c.north)+(0,+\upperoffset)$);
-  \draw (1e.north)+(-0.2cm,+\upperoffset) edge ["B undo",optrans] ($(1d.north)+(0,+\upperoffset)$);
+  \draw (a2.north)+(-0.2cm,+\upperoffset) edge ["A set",optrans] ($(a1.north)+(0,+\upperoffset)$);
+  \draw (a3.north)+(-0.2cm,+\upperoffset) edge ["B set",optrans] ($(a2.north)+(0,+\upperoffset)$);
+  \draw (a4.north)+(-0.2cm,+\upperoffset) edge ["A undo",optrans] ($(a3.north)+(0,+\upperoffset)$);
+  \draw (a5.north)+(-0.2cm,+\upperoffset) edge ["A redo",optrans] ($(a4.north)+(0,+\upperoffset)$);
 
   %%%%
   
