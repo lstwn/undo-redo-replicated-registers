@@ -783,18 +783,6 @@ performed by any user.
 In any case, however, a redo restores to the state prior to its corresponding undo,
 regardless of the origin of the operations that constitute this state.
 
-%% no concurrency for now
-% The rectangle's color is stored in a \gls*{lwwr}~\cite{shapiro2011comprehensive}.
-% If multiple users concurrently set its color, the register picks one of
-% the concurrently assigned colors arbitrarily as the merged final state.
-% The difference between the upper scenario (1a-1e) and the lower scenario (2a-2e)
-% is that in the former, $A$ and $B$ do not work on the same register:
-% $A$ works exclusively on the upper rectangle and $B$ on the lower one.
-% In the lower scenario, $A$ and $B$ collaborate on the same rectangle.
-% All operations are immediately synced to the other user before another change
-% is introduced, avoiding concurrency for now.
-% Hence, both users have seen the same progression of colors.
-
 %% software survey
 
 We tested the behavior of undo and redo in Google Sheets, Google Slides,
@@ -868,203 +856,42 @@ despite not being affected by this, makes another case for following their lead.
 
 \section{Background on MVRs}\label{sec:background}
 
-\begin{figure*}[!ht]
-\centering
-\begin{tikzpicture}
-  \tikzset{
-    font=\footnotesize,
-    op/.style={
-      state,
-    },
-  }
-
-  \node [anchor=west] at (0.0,5.4) {Actor A:};
-  \node [anchor=west] at (0.0,1.4) {Actor B:};
-
-  \def\dist{1.4cm}
-
-  \node [rectangle,draw,anchor=west] (a1) at (0,4) {
-    \begin{tikzpicture}[node distance=\dist]
-      \node[op] (opa1) {\setop{1}{A}{1}};
-      \node[head, right of=opa1] (opb2) {\setop{2}{B}{2}} edge [pred] (opa1);
-
-      \node[below=of opb2,yshift=+1.3cm] (vals) {$\text{MVR}: [2]$};
-      \node[stepmarker,anchor=south west] at (0,-1.25) {(1)};
-    \end{tikzpicture}
-  };
-
-  \node [rectangle,draw,anchor=west] (b1) at (0,0) {
-    \begin{tikzpicture}[node distance=\dist]
-      \node[op] (opa1) {\setop{1}{A}{1}};
-      \node[head, right of=opa1] (opb2) {\setop{2}{B}{2}} edge [pred] (opa1);
-
-      \node[below=of opb2,yshift=+1.3cm] (vals) {$\text{MVR}: [2]$};
-      \node[stepmarker,anchor=south west] at (0,-1.25) {(1)};
-    \end{tikzpicture}
-  };
-
-  \node [rectangle,draw,anchor=west] (a2) at (3.05,4) {
-    \begin{tikzpicture}[node distance=\dist]
-      \node[op] (opa1) {\setop{1}{A}{1}};
-      \node[op, right of=opa1] (opb2) {\setop{2}{B}{2}} edge [pred] (opa1);
-      \node[head, right of=opb2] (opa3) {\setop{3}{A}{3}} edge [pred] (opb2);
-
-      \node[below=of opa3,yshift=+1.3cm] (vals) {$\text{MVR}: [3]$};
-      \node[stepmarker,anchor=south west] at (0,-1.25) {(2a)};
-    \end{tikzpicture}
-  };
-
-  \node [rectangle,draw,anchor=west] (b2) at (3.05,0) {
-    \begin{tikzpicture}[node distance=\dist]
-      \node[op] (opa1) {\setop{1}{A}{1}};
-      \node[op, right of=opa1] (opb2) {\setop{2}{B}{2}} edge [pred] (opa1);
-      \node[head, right of=opb2] (opb3) {\setop{3}{B}{4}} edge [pred] (opb2);
-
-      \node[below=of opa3,yshift=+1.3cm] (vals) {$\text{MVR}: [4]$};
-      \node[stepmarker,anchor=south west] at (0,-1.25) {(2b)};
-    \end{tikzpicture}
-  };
-
-  \node [rectangle,draw,anchor=west] (a3) at (7.5,4) {
-    \begin{tikzpicture}[node distance=\dist]
-      \node[op] (opa1) {\setop{1}{A}{1}};
-      \node[op, right of=opa1] (opb2) {\setop{2}{B}{2}} edge [pred] (opa1);
-      \node[head, above right=of opb2, xshift=-0.4cm, yshift=-1.2cm] (opa3) {\setop{3}{A}{3}} edge [pred] (opb2);
-      \node[head, below right=of opb2, xshift=-0.4cm, yshift=+1.2cm] (opb3) {\setop{3}{B}{4}} edge [pred] (opb2);
-
-      \node[below=of opb3,yshift=+1.3cm,xshift=-0.17cm] (vals) {$\text{MVR}: [4,3]$};
-      \node[stepmarker,anchor=south west] at (0,-1.76) {(3)};
-    \end{tikzpicture}
-  };
-
-  \node [rectangle,draw,anchor=west] (b3) at (7.5,0) {
-    \begin{tikzpicture}[node distance=\dist]
-      \node[op] (opa1) {\setop{1}{A}{1}};
-      \node[op, right of=opa1] (opb2) {\setop{2}{B}{2}} edge [pred] (opa1);
-      \node[head, above right=of opb2, xshift=-0.4cm, yshift=-1.2cm] (opa3) {\setop{3}{A}{3}} edge [pred] (opb2);
-      \node[head, below right=of opb2, xshift=-0.4cm, yshift=+1.2cm] (opb3) {\setop{3}{B}{4}} edge [pred] (opb2);
-
-      \node[below=of opb3,yshift=+1.3cm,xshift=-0.17cm] (vals) {$\text{MVR}: [4,3]$};
-      \node[stepmarker,anchor=south west] at (0,-1.76) {(3)};
-    \end{tikzpicture}
-  };
-
-  \node [rectangle,draw,anchor=west] (a4) at (11.93,4) {
-    \begin{tikzpicture}[node distance=\dist]
-      \node[op] (opa1) {\setop{1}{A}{1}};
-      \node[op, right of=opa1] (opb2) {\setop{2}{B}{2}} edge [pred] (opa1);
-      \node[op, above right=of opb2, xshift=-0.4cm, yshift=-1.2cm] (opa3) {\setop{3}{A}{3}} edge [pred] (opb2);
-      \node[op, below right=of opb2, xshift=-0.4cm, yshift=+1.2cm] (opb3) {\setop{3}{B}{4}} edge [pred] (opb2);
-      \node[head, below right=of opa3, xshift=-0.4cm, yshift=+1.2cm] (opa4) {\delop{4}{A}} edge [pred] (opa3) edge [pred] (opb3);
-
-      \node[below=of opa4,yshift=+1.3cm] (vals) {$\text{MVR}: []$};
-      \node[stepmarker,anchor=south west] at (0,-1.34) {(4)};
-    \end{tikzpicture}
-  };
-
-  \node [rectangle,draw,anchor=west] (b4) at (11.93,0) {
-    \begin{tikzpicture}[node distance=\dist]
-      \node[op] (opa1) {\setop{1}{A}{1}};
-      \node[op, right of=opa1] (opb2) {\setop{2}{B}{2}} edge [pred] (opa1);
-      \node[op, above right=of opb2, xshift=-0.4cm, yshift=-1.2cm] (opa3) {\setop{3}{A}{3}} edge [pred] (opb2);
-      \node[op, below right=of opb2, xshift=-0.4cm, yshift=+1.2cm] (opb3) {\setop{3}{B}{4}} edge [pred] (opb2);
-      \node[head, below right=of opa3, xshift=-0.4cm, yshift=+1.2cm] (opa4) {\delop{4}{A}} edge [pred] (opa3) edge [pred] (opb3);
-
-      \node[below=of opa4,yshift=+1.3cm] (vals) {$\text{MVR}: []$};
-      \node[stepmarker,anchor=south west] at (0,-1.34) {(4)};
-    \end{tikzpicture}
-  };
-
-  \draw [|-|,draw=green!80!black!80,dashed] 
-    ($(a1.south west)!0.5!(b1.north west)$) -- ($(a1.south east)!0.5!(b1.north east)$);
-  \draw [|-|,draw=red] 
-    ($(a1.south east)!0.5!(b1.north east)$) -- 
-    node[above,color=red] {Network Partition}
-    ($(a3.south west)!0.5!(b3.north west)$);
-  \draw [|-|,draw=green!80!black!80,dashed]
-    ($(a3.south west)!0.5!(b3.north west)$) -- ($(a4.south east)!0.5!(b4.north east)$);
-
-\end{tikzpicture}
-\caption{
-An operation history which is replicated between two actors A and B.
-Time flows from left to right and is discretized into four different steps
-depicted by the boxes.
-At each step the state of the \gls*{mvr} is depicted below the current heads.
-Heads are denoted as circles with double borders.
-Due to concurrent operations during a network partition (2a) and (2b),
-the \gls*{mvr} diverges and causes a conflict (3) which is later
-reconciled by A's final delete operation (4).
-}\label{fig:op-hist-basic}
-\end{figure*}
-
 A \acrfull{mvr}~\cite{shapiro2011comprehensive} is a data type from the family
 of \glspl*{crdt}~\cite{preguicca2018conflict} 
 that can be assigned a value, overwriting any previous value.
 When multiple values are concurrently assigned, the \gls*{mvr} retains all
 values that have not been overwritten.
-All values currently held by a register are called the register's \emph{siblings}.
+All values currently held by a register are called the register's \emph{siblings}
+and we require that all replicas return siblings in the same order, e.g.,
+sorted by a logical timestamp.
+For undo and redo behavior, an undo (or a redo) operation
+may reintroduce multiple siblings that have been overwritten in the past.
 We assume an operation-based \gls*{crdt} model~\cite{baquero2017pure}.
 
-In the previous section we have only discussed \glspl*{lwwr}
-but they suffer from data loss in case of concurrent updates.
-To mitigate this, we consider \glspl*{mvr} for the rest of this paper.
-\glspl{mvr} are a generalization of \glspl*{lwwr} that expose conflicts
-and enable the application to pick one
-of the concurrently written values or to merge them using custom application logic.
-If the application developer prefers the behavior of \glspl*{lwwr},
-it is easy to convert an \gls*{mvr} into a \gls*{lwwr} by picking the
-sibling with the highest timestamp.
-For undo and redo behavior, this means that an undo (or a redo) operation
-may reintroduce conflicts that have been resolved in the past.
-
-An \emph{actor} is a process that can generate updates on an \gls*{mvr} and apply
-them locally as well as broadcast them to other actors which in turn apply
-them to their own replica of the \gls*{mvr}.
-Updates to a register are also referred to as \emph{operations}.
+Replicas store their own copy of the \gls{mvr} and can perform updates on it,
+generating an operation which the replica can apply locally,
+as well as broadcast to other replicas, which in turn apply it to their own
+copy of the \gls{mvr}.
 We call an operation \emph{local to a replica} if it originated from that
 same replica.
 Otherwise, we call it \emph{remote}.
 
-The \gls*{mvr} supports the following functions.
-Later we will extend this interface with undo and redo operations.
-
-\begin{itemize}
-  \item \texttt{get() -> Value[]}:
-    Gets all siblings of the register sorted
-    according to some total order (typically based on a logical timestamp)
-    of the operations.
-  \item \texttt{set(value: Option<Value>) -> SetOp<Value>}:
-    Creates a new operation of kind \setopkind{} that overwrites the value
-    of the register with the specified value.
-    If no value is provided, the register is cleared, enabling delete functionality.
-    This operation is immediately applied to the local replica and
-    broadcast to all other actors.
-\end{itemize}
-
-Furthermore, each operation has a unique identifier (a logical timestamp)
+Each operation has a unique identifier (a logical timestamp)
 which imposes a total order over all operations.
 This order is a linear extension of the happens-before relation~\cite{lamport1978time}.
 We call this identifier the \emph{\gls*{opid}}.
 An example of such an identifier is pair of a local counter and a unique identifier
 for each actor.
-For instance, \op{3}{A} denotes an operation by actor $A$
+We write \op{3}{A} to denote an operation by actor $A$
 with a local counter value of $3$.
 Whenever a new operation is generated, its counter value is set to one plus
 the greatest counter value of any existing operation known to the generating
 replica.
-This essentially yields a Lamport clock~\cite{lamport1978time} that considers
-each operation as an event.
-However, unlike the original Lamport clock, we do not count the receiving
-or sending of operations as events.
-This total order is only used for determining the order among
-siblings in case of concurrent operations but not for determining
-whether two operations are concurrent or one happened-before the other.
-This is done by causal dependency tracking via a predecessor relation
-which we discuss next.
+This essentially yields a Lamport clock~\cite{lamport1978time}.
 
-When multiple actors concurrently edit a document, the operation history becomes
-non-linear.
-We model operation histories as a directed acyclic graph
+When multiple actors concurrently update the register,
+the operation history becomes non-linear.
+We model an operation history as a directed acyclic graph
 where each node represents an operation and 
 each edge from node \op{2}{} to node \op{1}{}
 represents a causal dependency of \op{2}{} on \op{1}{}, that is, if
@@ -1079,25 +906,7 @@ other.
 The operations that do not have any successors are called \emph{heads} and
 the operations that do not have any predecessors are called \emph{roots}.
 An operation may have multiple predecessors and multiple successors.
-An operation with multiple successors is the result of concurrency.
-% darling marker
-% concurrency is introduced as it forks the operation history 
-% into multiple diverging branches.
-% The outgoing degree of a node in the graph corresponds to the number of successors
-% of an operation.
-% This is referred to as the \emph{degree of concurrency} of an operation.
 Whenever an operation has multiple predecessors, we call it a \emph{merge} operation.
-% as it merges multiple diverging branches into one.
-
-\autoref{fig:op-hist-basic} shows an example of an operation history which is
-replicated across two actors A and B.
-In step (4), \setop{1}{A}{1} is the only root and \delop{4}{A} is the only head.
-\delop{4}{A} is also a merge operation as it has two predecessors, the two
-heads from step (3).
-\setop{3}{A}{3} and \setop{3}{B}{4} are concurrent operations.
-Our operation history has similarities with git's commit graph which is also
-a directed acyclic graph, with nodes representing commits
-rather than operations.
 
 Operations can be delivered in any order and also multiple
 times because a replica can easily ensure idempotence by
@@ -1105,8 +914,6 @@ keeping track of the applied operations through their \glspl*{opid}.
 Each replica buffers operations it receives and delivers them
 once they are causally ready, i.e., once all ancestors of an operation
 have been delivered.
-Unlike a traditional causal broadcast,
-our algorithm requires storing the operations with a traversable predecessor relationship.
 
 \section{Generating Operations for Undo/Redo}\label{sec:overview}
 
@@ -1389,7 +1196,7 @@ which cannot occur on the same position of another, \emph{longer} \opidtrace{}.
 An operation history which is replicated between two actors A and B that includes
 undo and redo operations. For clarity, undo and redo operations are not labeled
 as \restopkind{}s. Their respective anchor operations are indicated by the
-dashed blue arrows and denoted in parenthesis.
+dashed blue arrows and denoted in parentheses.
 The dotted lines indicate time steps during which we show the nodes' states in
 \cref{tab:node-states}.
 }\label{fig:op-hist-undo-redo}
@@ -1482,11 +1289,11 @@ The internal states of the nodes' undo and redo stacks and the values of the reg
 at the time steps from \cref{fig:op-hist-undo-redo}.
 A set operation is abbreviated by $\mathit{\setabbr}$ and a restore operation
 by $\mathit{\restabbr}$
-with its anchor operation denoted within parenthesis.
+with its anchor operation denoted within the parentheses.
 In case a cell contains a reference to another time step, the value is exactly
 the same as in that respective step.
-The difference between (2a) and (2b) is that in (2a) both replicas have not yet
-synced whereas in (2b) they have exchanged their operations.
+The difference between (2a) and (2b) is that in (2a) the replicas have not yet
+synced, whereas in (2b) they have exchanged their operations.
 At all other time steps the operations are assumed to be synced.
 }\label{tab:node-states}
 \end{table*}
@@ -1565,27 +1372,27 @@ However, this requires the sorting algorithm to be stable.
 % Experimental testbed, benchmarks, methodology
 % Evaluate the research questions/hypotheses
 
-\begin{figure*}[ht!]
-\centering
-\begin{tikzpicture}[node distance=50pt]
+% \begin{figure*}[ht!]
+% \centering
+% \begin{tikzpicture}[node distance=50pt]
 
-  % nodes and edges
-  \node[op] (a1) at (0, 0) {\setop{1}{A}{1}};
-  \node[op,right of=a1] (a2) {\undop{2}{A}{1}{A}} edge [pred] (a1) edge [anchorref,bend left] (a1);
-  \node[op,right of=a2] (a3) {\redop{3}{A}{2}{A}} edge [pred] (a2) edge [anchorref,bend left] (a2);
-  \node[op,right of=a3] (a4) {\undop{4}{A}{1}{A}} edge [pred] (a3) edge [anchorref,bend right] (a1);
-  \node[op,right of=a4] (a5) {\redop{5}{A}{4}{A}} edge [pred] (a4) edge [anchorref,bend left] (a4);
-  \node[op,right of=a5] (a6) {\undop{6}{A}{1}{A}} edge [pred] (a5) edge [anchorref,bend right=38] (a1);
-  \node[head,right of=a6] (a7) {\redop{7}{A}{6}{A}} edge [pred] (a6) edge [anchorref,bend left] (a6);
+%   % nodes and edges
+%   \node[op] (a1) at (0, 0) {\setop{1}{A}{1}};
+%   \node[op,right of=a1] (a2) {\undop{2}{A}{1}{A}} edge [pred] (a1) edge [anchorref,bend left] (a1);
+%   \node[op,right of=a2] (a3) {\redop{3}{A}{2}{A}} edge [pred] (a2) edge [anchorref,bend left] (a2);
+%   \node[op,right of=a3] (a4) {\undop{4}{A}{1}{A}} edge [pred] (a3) edge [anchorref,bend right] (a1);
+%   \node[op,right of=a4] (a5) {\redop{5}{A}{4}{A}} edge [pred] (a4) edge [anchorref,bend left] (a4);
+%   \node[op,right of=a5] (a6) {\undop{6}{A}{1}{A}} edge [pred] (a5) edge [anchorref,bend right=38] (a1);
+%   \node[head,right of=a6] (a7) {\redop{7}{A}{6}{A}} edge [pred] (a6) edge [anchorref,bend left] (a6);
 
-\end{tikzpicture}
-\caption{
-  A sequence of alternating undo-redo operations
-  of length $3$ (counting one undo-redo-pair as one).
-  In this case, the algorithm's run time is not constant but linear
-  in the length of the sequence.
-}\label{fig:degenerate-op-sequence}
-\end{figure*}
+% \end{tikzpicture}
+% \caption{
+%   A sequence of alternating undo-redo operations
+%   of length $3$ (counting one undo-redo-pair as one).
+%   In this case, the algorithm's run time is not constant but linear
+%   in the length of the sequence.
+% }\label{fig:degenerate-op-sequence}
+% \end{figure*}
 
 To evaluate the correctness of our algorithm, we demonstrate that it converges,
 and we check the behavior of our reference implementation with a suite of unit tests.
@@ -2021,46 +1828,23 @@ for implementing local undo.
       swap,
       black!70,
     },
-    casediv/.style={
-      black!70,
+    next/.style={
+      <-,
+      >={Stealth[round]},
     },
   }
 
   \def\black{black}
   \def\green{green!60!black}
   \def\red{red}
-  \def\upperoffset{8pt}
-
-  % divider lines and ops
-
-  \coordinate (d1s) at ($(a1.north)!0.5!(a2.north)+(0,+\upperoffset)$);
-  \coordinate (da5) at ($(e1.south)!0.5!(e2.south)+(0,0)$);
-
-  \coordinate (d2s) at ($(a2.north)!0.5!(a3.north)+(0,+\upperoffset)$);
-  \coordinate (db5) at ($(e2.south)!0.5!(e3.south)+(0,0)$);
-
-  \coordinate (d3s) at ($(a3.north)!0.5!(a4.north)+(0,+\upperoffset)$);
-  \coordinate (dc5) at ($(e3.south)!0.5!(e4.south)+(0,0)$);
-
-  \coordinate (d4s) at ($(a4.north)!0.5!(a5.north)+(0,+\upperoffset)$);
-  \coordinate (dd4) at ($(e4.south)!0.5!(e5.south)+(0,0)$);
-
-  \draw[stepline] (d1s) -- (da5);
-  \draw[stepline] (d2s) -- (db5);
-  \draw[stepline] (d3s) -- (dc5);
-  \draw[stepline] (d4s) -- (dd4);
-
-  \draw (a2.north)+(-0.2cm,+\upperoffset) edge ["A set",optrans] ($(a1.north)+(0,+\upperoffset)$);
-  \draw (a3.north)+(-0.2cm,+\upperoffset) edge ["B set",optrans] ($(a2.north)+(0,+\upperoffset)$);
-  \draw (a4.north)+(-0.2cm,+\upperoffset) edge ["A undo",optrans] ($(a3.north)+(0,+\upperoffset)$);
-  \draw (a5.north)+(-0.2cm,+\upperoffset) edge ["A redo",optrans] ($(a4.north)+(0,+\upperoffset)$);
+  \def\upperoffset{16pt}
 
   %%%%
   
   \node[
     canvas,
     label={[]above:(1)},
-  ] (2a) at (c1) {
+  ] (a1) at (c1) {
     \begin{tikzpicture}[node distance=3pt]
       \node[
           rect=\black,
@@ -2071,52 +1855,76 @@ for implementing local undo.
   \node[
     canvas,
     label={[]above:(2)},
-    right = of 2a,
-  ] (2b) {
+    right = of a1,
+  ] (a2) {
     \begin{tikzpicture}[node distance=3pt]
       \node[
           rect=\red,
         ] (r1) at (0,0) {\vphantom{bg}red};
     \end{tikzpicture}
-  } edge (2a);
+  } edge [next] (a1);
 
   \node[
     canvas,
     label={[]above:(3)},
-    right = of 2b,
-  ] (2c) {
+    right = of a2,
+  ] (a3) {
     \begin{tikzpicture}[node distance=3pt]
       \node[
           rect=\green,
         ] (r1) at (0,0) {\vphantom{bg}green};
     \end{tikzpicture}
-  } edge (2b);
+  } edge [next] (a2);
 
   %%%
 
   \node[
     canvas,
     label={[]above:(4)},
-    right = of 2c,
-  ] (2d1) {
+    right = of a3,
+  ] (a4) {
     \begin{tikzpicture}[node distance=3pt]
       \node[
           rect=\black,
         ] (r1) at (0,0) {\vphantom{bg}black};
     \end{tikzpicture}
-  } edge (2c);
+  } edge [next] (a3);
 
   \node[
     canvas,
     label={[]above:(5)},
-    right = of 2d1,
-  ] (2d1e2) {
+    right = of a4,
+  ] (a5) {
     \begin{tikzpicture}[node distance=3pt]
       \node[
           rect=\red,
         ] (r1) at (0,0) {\vphantom{bg}red};
     \end{tikzpicture}
-  } edge (2d1);
+  } edge [next] (a4);
+
+  % divider lines and ops
+
+  \coordinate (d1s) at ($(a1.north)!0.5!(a2.north)+(0,+\upperoffset)$);
+  \coordinate (da5) at ($(a1.south)!0.5!(a2.south)+(0,0)$);
+
+  \coordinate (d2s) at ($(a2.north)!0.5!(a3.north)+(0,+\upperoffset)$);
+  \coordinate (db5) at ($(a2.south)!0.5!(a3.south)+(0,0)$);
+
+  \coordinate (d3s) at ($(a3.north)!0.5!(a4.north)+(0,+\upperoffset)$);
+  \coordinate (dc5) at ($(a3.south)!0.5!(a4.south)+(0,0)$);
+
+  \coordinate (d4s) at ($(a4.north)!0.5!(a5.north)+(0,+\upperoffset)$);
+  \coordinate (dd4) at ($(a4.south)!0.5!(a5.south)+(0,0)$);
+
+  \draw[stepline] (d1s) -- (da5);
+  \draw[stepline] (d2s) -- (db5);
+  \draw[stepline] (d3s) -- (dc5);
+  \draw[stepline] (d4s) -- (dd4);
+
+  \draw (a2.north)+(-0.2cm,+\upperoffset) edge ["A set",optrans] ($(a1.north)+(0,+\upperoffset)$);
+  \draw (a3.north)+(-0.2cm,+\upperoffset) edge ["B set",optrans] ($(a2.north)+(0,+\upperoffset)$);
+  \draw (a4.north)+(-0.2cm,+\upperoffset) edge ["A undo",optrans] ($(a3.north)+(0,+\upperoffset)$);
+  \draw (a5.north)+(-0.2cm,+\upperoffset) edge ["B undo",optrans] ($(a4.north)+(0,+\upperoffset)$);
 
 \end{tikzpicture}
 \caption{
@@ -2165,68 +1973,68 @@ undo and redo stack for all \glspl{mvr} in the entire data structure.
 
 %%
 %% If your work has an appendix, this is the place to put it.
-\appendix
+% \appendix
 
-\section{Challenges with Global Undo}\label{adx:global-undo-challenges}
+% \section{Challenges with Global Undo}\label{adx:global-undo-challenges}
 
-Although we argued against the behavior of global undo, we put forward
-some considerations if using it in an eventually consistent setting that
-allows for operations to arrive in causal (or even arbitrary) order.
+% Although we argued against the behavior of global undo, we put forward
+% some considerations if using it in an eventually consistent setting that
+% allows for operations to arrive in causal (or even arbitrary) order.
 
-\subsection{Undo Order}
+% \subsection{Undo Order}
 
-In general, an undo mechanism requires some order to determine which
-operation(s) to undo next. 
-While this does not have to be a total order and
-one could come up with a scheme how to undo a partial order,
-the eventual consistent setting poses a technical limit:
-Suppose there is a sequence of undo operations and the first undone operation
-has timestamp $t_f$ and the last undone operation $t_l$.
-Then, an operation is delivered out-of-order with
-timestamp $t_m$ such that $t_l < t_m < t_f$ according to the (partial) order.
-This means that \emph{if} the out-of-order operation had been delivered earlier it
-had also been undone by the undo sequence.
-We call such operations \emph{out-of-order delivered and behind the undo cursor}.
-This leaves the question of how to treat these operations.
-A potential solution is to turn the undo stack into a priority queue and
-then undo the operation at the time of arrival at the undoing actor but
-that may cause hard to understand jumps in time for users.
-Another option is to ignore these operations but that poses the issue of
-how to deal with them upon subsequent redos.
-We are not convinced of any good solution here and think of this as another,
-rather technical reason to avoid global undo behavior in eventually consistent
-settings.
+% In general, an undo mechanism requires some order to determine which
+% operation(s) to undo next. 
+% While this does not have to be a total order and
+% one could come up with a scheme how to undo a partial order,
+% the eventual consistent setting poses a technical limit:
+% Suppose there is a sequence of undo operations and the first undone operation
+% has timestamp $t_f$ and the last undone operation $t_l$.
+% Then, an operation is delivered out-of-order with
+% timestamp $t_m$ such that $t_l < t_m < t_f$ according to the (partial) order.
+% This means that \emph{if} the out-of-order operation had been delivered earlier it
+% had also been undone by the undo sequence.
+% We call such operations \emph{out-of-order delivered and behind the undo cursor}.
+% This leaves the question of how to treat these operations.
+% A potential solution is to turn the undo stack into a priority queue and
+% then undo the operation at the time of arrival at the undoing actor but
+% that may cause hard to understand jumps in time for users.
+% Another option is to ignore these operations but that poses the issue of
+% how to deal with them upon subsequent redos.
+% We are not convinced of any good solution here and think of this as another,
+% rather technical reason to avoid global undo behavior in eventually consistent
+% settings.
 
-Nevertheless, we briefly sketch a scheme how to undo a partial order.
-The idea is to use multiple cursors that undo in parallel whenever the
-partial order cannot compare operations (due to concurrency).
-After a merge operation is undone, assume there are multiple branches
-that are candidates to undo next.
-For each branch a cursor pointing to the next operation that is due for undo
-is created and it initially points to the respective tip of the branch.
-Upon undo, the \gls{mvr} is populated with all values contributed by the
-operations referenced by the cursors, and the cursors are advanced
-to point to their predecessors.
-Different strategies may be employed to coordinate the cursors in case
-any cursor hits a common ancestor or another merge operation.
+% Nevertheless, we briefly sketch a scheme how to undo a partial order.
+% The idea is to use multiple cursors that undo in parallel whenever the
+% partial order cannot compare operations (due to concurrency).
+% After a merge operation is undone, assume there are multiple branches
+% that are candidates to undo next.
+% For each branch a cursor pointing to the next operation that is due for undo
+% is created and it initially points to the respective tip of the branch.
+% Upon undo, the \gls{mvr} is populated with all values contributed by the
+% operations referenced by the cursors, and the cursors are advanced
+% to point to their predecessors.
+% Different strategies may be employed to coordinate the cursors in case
+% any cursor hits a common ancestor or another merge operation.
 
-If the increased complexity from the cursor handling is undesired,
-the total order imposed by the operation ids could also be used.
-However, the out of order delivery issue remains for both total and
-partial orders.
-In contrast, local undo restricts the undoable operations to the subset of
-the actor's own operations which are always delivered in order at each actor,
-and thereby does not suffer from this problem.
+% If the increased complexity from the cursor handling is undesired,
+% the total order imposed by the operation ids could also be used.
+% However, the out of order delivery issue remains for both total and
+% partial orders.
+% In contrast, local undo restricts the undoable operations to the subset of
+% the actor's own operations which are always delivered in order at each actor,
+% and thereby does not suffer from this problem.
 
-\subsection{Metadata Overhead}
+% \subsection{Metadata Overhead}
 
-Local undo partitions the set of operations into disjoint sets,
-one set for each actor.
-Since an actor can only undo her own operations,
-it cannot happen that concurrently the same operation is undone multiple times,
-or that the same operation is both undone and redone by different actors.
-While it certainly is possible to design some data structure to account for this,
-it increases the complexity and overhead of the algorithm.
+% Local undo partitions the set of operations into disjoint sets,
+% one set for each actor.
+% Since an actor can only undo her own operations,
+% it cannot happen that concurrently the same operation is undone multiple times,
+% or that the same operation is both undone and redone by different actors.
+% While it certainly is possible to design some data structure to account for this,
+% it increases the complexity and overhead of the algorithm.
 
 \end{document}
 \endinput
