@@ -146,7 +146,6 @@
 \def\restabbr{rs}
 \newcommand{\setopkind}{\textit{SetOp}}
 \newcommand{\restopkind}{\textit{RestoreOp}}
-\newcommand{\terminalopkind}{\textit{TerminalOp}}
 \newcommand{\opidtrace}{\textit{OpIdTrace}}
 
 %%
@@ -724,7 +723,7 @@ which is a JSON \gls*{crdt} that is based on \glspl*{mvr}.
   
 \end{tikzpicture}
 \caption{
-  Different semantics of undo and redo with two users A and B collaboratively
+  Different semantics of undo and redo with two users $A$ and $B$ collaboratively
   editing one (two) register(s).
 }\label{fig:intro-example}
 \end{figure}
@@ -774,7 +773,7 @@ green.
 \textbf{Remote operation blocks undo.}
 In \cref{fig:intro-example}~\ref{fig:one-reg-block}, if user $A$ tries to
 perform an undo in a state where the most recent operation is by a different user,
-the undo function is disabled for $A$.
+undo is disabled for $A$.
 
 To sum it up, \emph{local undo} undoes the last operation
 performed by the same user who issues the undo.
@@ -827,12 +826,11 @@ With global undo, $A$ may be surprised to see no immediate effect of her undo
 because it reverted $B$'s green coloring on a different slide,
 while actually expecting her last change to be undone for fixing
 an accidental change of hers.
-On the other hand, $B$ may surprised to learn that her last
-change was undone for no obvious reason.
+$B$ may be surprised to learn that her last change was undone for no obvious reason.
 With more users editing collaboratively, the problem exacerbates, as the
 share of remote operations tends to increase with the number of users.
-Hence, we are convinced that the strongest reasonable assumption is to
-assume that users are aware of their own changes.
+Hence, the strongest reasonable assumption is to assume that users are only
+aware of their own changes.
 Since we think that users favor predictable and consistent semantics,
 undo behavior with one register should follow local undo behavior as well and
 not depend on the number of registers involved.
@@ -881,15 +879,14 @@ which imposes a total order over all operations.
 This order is a linear extension of the happens-before relation~\cite{lamport1978time}.
 We call this identifier the \emph{\gls*{opid}}.
 An example of such an identifier is pair of a local counter and a unique identifier
-for each actor.
-We write \op{3}{A} to denote an operation by actor $A$
+for each replica.
+We write \op{3}{A} to denote an operation by replica $A$
 with a local counter value of $3$.
 Whenever a new operation is generated, its counter value is set to one plus
-the greatest counter value of any existing operation known to the generating
-replica.
+the greatest counter value of any operation known to the generating replica.
 This essentially yields a Lamport clock~\cite{lamport1978time}.
 
-When multiple actors concurrently update the register,
+When multiple replicas concurrently update the register,
 the operation history becomes non-linear.
 We model an operation history as a directed acyclic graph
 where each node represents an operation and 
@@ -903,13 +900,13 @@ Furthermore, we call \op{1}{} an \emph{ancestor} of \op{2}{} and
 path from \op{2}{} to \op{1}{}.
 We call \op{1}{} and \op{2}{} \emph{concurrent} if neither is an ancestor of the
 other.
-The operations that do not have any successors are called \emph{heads} and
-the operations that do not have any predecessors are called \emph{roots}.
+Operations without any successors are called \emph{heads} and
+operations without any predecessors are called \emph{roots}.
 An operation may have multiple predecessors and multiple successors.
 Whenever an operation has multiple predecessors, we call it a \emph{merge} operation.
 
 Operations can be delivered in any order and also multiple
-times because a replica can easily ensure idempotence by
+times because a replica can ensure idempotence by
 keeping track of the applied operations through their \glspl*{opid}.
 Each replica buffers operations it receives and delivers them
 once they are causally ready, i.e., once all ancestors of an operation
@@ -922,49 +919,45 @@ have been delivered.
 % histories.
 % This yields the first design goal for undo and redo semantics in a collaborative
 % setting: Given that the operation history is linear,
-% undo and redo should behave in the same way as in a single-actor setting.
+% undo and redo should behave in the same way as in a single-replica setting.
 % We think that a good generalization should cover the special case it
 % originated from just as well.
 
-So far the \gls*{mvr} supports one kind of operation, the \setopkind{}.
-It is used to enable both setting a value and deleting values from the register.
-In case of a set operation, the value is supplied in the payload of the \setopkind{}.
-In case of a delete operation, the payload of the \setopkind{} is empty.
+% The \setopkind{} is also called a \emph{terminal operation}
+% because it produces a value (or deletes the register) but does not require a further
+% search through the history to find out about its contribution to the register's
+% values.
+
 All operations carry an \gls*{opid} and its set of predecessor \glspl*{opid},
 that represent their causal dependencies.
 The values produced by these predecessors are the ones that the operation
 overwrites.
-The \setopkind{} is also called a \emph{terminal operation}
-because it produces a value (or deletes the register) but does not require a further
-search through the history to find out about its contribution to the register's
-values.
-
-We introduce a second operation kind that we call \restopkind{}.
+Next to the \setopkind{}, which sets the \gls{mvr} to the supplied value,
+we introduce a second type of operation that we call \restopkind{}.
 The payload of this operation (in addition to its \gls*{opid} and predecessors)
-is the \gls*{opid} of an ancestor operation which we call \emph{anchor} operation.
+is the \gls*{opid} of an ancestor operation which we call its
+\emph{anchor} operation.
 The effect of this operation is to restore the state of the register to the
-state immediately before the anchor operation by searching through the
-operation history.
-This operation kind is used to implement both undo and redo.
+state prior to the anchor operation by searching through the operation history.
+\restopkind{}s are used to implement both undo and redo.
 
-To support undo and redo, we need to introduce some additional state-keeping
-besides the operation history.
+Moreover, we require some additional state besides the operation history.
 We introduce two stacks, one for undo and one for redo, with the usual
 \acrlong{lifo} semantics.
 Both stacks exclusively contain operations generated on the local replica and
 ignore remote operations.
 
-When a local terminal operation is generated, it is pushed onto the undo stack and
+When a local \setopkind{} is generated, it is pushed onto the undo stack and
 the redo stack is cleared, which causes the loss of the ability to redo after
-some sequence of undo operations followed by a terminal operation.
+some sequence of undo operations followed by a \setopkind{}.
 This behavior is in line with what most mainstream software does and makes the
 undo and redo semantics easier to comprehend.
 Clearing the redo stack ensures that redo has a clear next choice of what to redo.
 Without clearing the stack, redo (and undo) would become a tree to navigate:
-after a sequence of undo operations followed by a terminal operation
+after a sequence of undo operations followed by a \setopkind{}
 which is undone again, a subsequent redo would have the choice of redoing
-either the previous undo operation or the later terminal operation.
-This complexity also exists in a single-actor setting.
+either the previous undo operation or the later \setopkind{}.
+This complexity also exists in a single-user setting.
 The vim text editor supports undo trees\footnote{
   \url{https://vimhelp.org/undo.txt.html\#undo-branches}
 } but it is unusual in this regard.
@@ -972,38 +965,21 @@ To avoid the user-facing complexity caused by undo trees,
 we follow the mainstream approach of redo stack clearing.
 
 When the local user performs an undo, we generate a \restopkind{} that
-references the terminal operation on top of the undo stack as its anchor
+references the \setopkind{} on top of the undo stack as its anchor
 and pop it off the undo stack.
 The generated \restopkind{} is pushed onto the redo stack to allow it to be
 redone later.
 When the local user performs a redo, we generate a \restopkind{} that
 references the \restopkind{} on top of the redo stack as its anchor and pop
 it off the redo stack.
-Its anchor is resolved to a terminal operation and
+Its anchor is resolved to a \setopkind{} and
 pushed onto the undo stack to allow it to be undone later for another time.
 For redo operations, its \restopkind{}'s anchor is another \restopkind{},
-hence requiring the algorithm to follow an indirection to resolve to a terminal
-operation.
+hence requiring the algorithm to follow one indirection to resolve to a \setopkind{}.
 
-This algorithm ensures that the undo stack contains only terminal operations and
+This algorithm ensures that the undo stack contains only \setopkind{}s and
 the redo stack contains only \restopkind{}s.
 That basically renders a redo as an ``undo of an undo''.
-Finally, we extend the \gls*{mvr} interface with undo and redo functions.
-
-\begin{itemize}
-  \item \texttt{undo() -> Option<RestoreOp>}:
-    Provided that the generating replica's undo stack is not empty,
-    this function generates a new operation of kind \restopkind{} that pops
-    the top operation off the undo stack and references it as its anchor.
-    The new operation is immediately applied to the local replica
-    and broadcast to all other actors.
-  \item \texttt{redo() -> Option<RestoreOp>}:
-    Provided that the generating replica's redo stack is not empty,
-    this function creates a new operation of kind \restopkind{} that pops
-    the top operation off the redo stack and references it as its anchor.
-    Again, the new operation is immediately applied to the local replica
-    and broadcast to all other actors.
-\end{itemize}
 
 \section{Applying Operations}\label{sec:implementation}
 
@@ -1031,10 +1007,10 @@ utilizes.
         \While{$\var{todo} \text{ is not empty}$}
           \State{$\var{[nextOp, opIdTrace]} \gets \var{todo.shift()}$}
           \State{$\var{opIdTrace} \gets (\ldots \var{opIdTrace}, \var{nextOp.opId})$}
-          \If{isTerminalOp($\var{nextOp}$)}
+          \If{isSetOp($\var{nextOp}$)}
             \State{$\var{termHeads.push(\var{[nextOp, opIdTrace]})}$}
           \Else{}
-            \Comment{current is a \restopkind{}}
+            \Comment{nextOp is a \restopkind{}}
             \State{$\var{anchor} \gets \var{nextOp.anchor}$}
             \ForAll{$\var{pred} \in \var{anchor.predecessors}$}
               \State{$\var{todo.push([pred, opIdTrace])}$}
@@ -1047,41 +1023,45 @@ utilizes.
 \end{algorithm}
 
 \autoref{alg:core-alg} takes the current set of heads of the operation history
-and returns a list of (\terminalopkind{}, \opidtrace{}) pairs which we
+and returns a list of (\setopkind{}, \opidtrace{}) pairs which we
 refer to as terminal heads.
 The \opidtrace{} is a list of \glspl*{opid} from the operations that have been
-visited along the path from a head to a terminal operation.
+visited along the path from a head to a \setopkind{}.
+We track the \opidtrace{} so that the current values of the register can be
+sorted by the \glspl{opid} of the undo/redo operations that restore those values,
+rather than the \glspl{opid} of the \setopkind{}s that originally assigned
+the values to the register.
 The \textit{shift()} method on a list pops the first element off the list and
 returns it.
 The \textit{push()} method on a list appends an element to the list.
 
 The algorithm proceeds as follows:
-If a head is a \setopkind{} (i.e., a terminal operation),
+If a head is a \setopkind{},
 it is a terminal head and added to the terminal heads list together with
 the \opidtrace{} that contains only the \gls*{opid} of the \setopkind{}.
 If a head is a \restopkind{}, the algorithm traverses the operation history
-by considering its anchor's predecessors iteratively until terminal operations
+by considering its anchor's predecessors iteratively until \setopkind{}s
 are encountered.
 While traversing the operation history, every encountered \gls*{opid}
 is added to the \opidtrace{} which is passed along to the next iteration.
-When the search stops at a terminal operation, the terminal operation and
+When the search stops at a \setopkind{}, the \setopkind{} and
 the \opidtrace{} are added to the terminal heads list as a pair.
-The \opidtrace{}'s last element is always an \gls*{opid} from a terminal operation
+The \opidtrace{}'s last element is always an \gls*{opid} from a \setopkind{}
 and any preceding element is an \gls*{opid} from a \restopkind{}.
 The processing order of heads and predecessors in the \textit{todo} list
 is not relevant for correctness as every terminal head is sorted later in
 \cref{alg:gen-values,alg:comparison-fn}.
 
-The reason for the differentiation between terminal operations and
+The reason for differentiating between \setopkind{}s and
 \restopkind{}s is that a \restopkind{} may contribute multiple values to
 the register due to concurrency in the operation history.
 For instance, if at any iteration step a merge \restopkind{} having $k$
 predecessors is processed, all $k$ predecessors are considered by the algorithm
 and they may produce $k$ or more siblings.
-In a nutshell, a \restopkind{} obtains its \emph{values} by iteratively
-following the predecessor relationship but the \emph{ordering} among the siblings
-produced by this traversal is determined by the \opidtrace{} as we will
-see when discussing \autoref{alg:comparison-fn}.
+A \restopkind{} obtains its \emph{values} by traversing
+the predecessor relationship but the \emph{ordering} among the siblings
+produced by this traversal is determined by the \opidtrace{} using
+\autoref{alg:comparison-fn}.
 
 \begin{algorithm}
   \caption{Resolve Terminal Heads to Value(s)}\label{alg:gen-values}
@@ -1100,11 +1080,11 @@ see when discussing \autoref{alg:comparison-fn}.
   \end{algorithmic}
 \end{algorithm}
 
-\autoref{alg:gen-values} sets the value(s) of the register
-given a list of terminal heads consisting of pairs of terminal operations and
+\autoref{alg:gen-values} determines the value(s) of the register
+given a list of terminal heads consisting of pairs of \setopkind{}s and
 \opidtrace{}s.
-First, it sorts the terminal heads by their \opidtrace{}
-in descending order in line 2 using \cref{alg:comparison-fn}.
+On line 2, it sorts the terminal heads by their \opidtrace{}
+in descending order using \cref{alg:comparison-fn}.
 Then, it filter maps the sorted terminal heads to their value(s) in lines 3-7.
 In case of a deletion (\setopkind{} with no value supplied),
 the corresponding terminal head is skipped and no value is produced.
@@ -1139,10 +1119,10 @@ first element (the \gls*{opid} of the head).
 If two terminal heads stem from the same head (which then must be a \restopkind{}),
 they might share a common path but their paths eventually diverge for some elements.
 The \textit{zip()} function's truncation does not harm this property
-as an \opidtrace{}'s last element is always an \gls*{opid} from a terminal operation
+as an \opidtrace{}'s last element is always an \gls*{opid} from a \setopkind{}
 which cannot occur on the same position of another, \emph{longer} \opidtrace{}.
 
-\begin{figure*}[h!]
+\begin{figure*}
 \centering
 \begin{tikzpicture}[node distance=50pt]
   \def\dist{22pt}
@@ -1170,11 +1150,13 @@ which cannot occur on the same position of another, \emph{longer} \opidtrace{}.
 
   \node[op,right of=b8] (b9) {\redop{9}{B}{6}{B}} edge [pred] (b8) edge [anchorref,bend right=30] (b6);
 
-  \node[op,right of=b9] (b10) {\redop{10}{B}{5}{B}} edge [pred] (b9) edge [anchorref,bend left=35] (b5);
+  \begin{scope}[on background layer]
+  \node[op,right of=b9] (b10) {\redop{10}{B}{5}{B}} edge [pred] (b9) edge [anchorref,] (b5);
+  \end{scope}
 
   % step marker and step lines
   \begin{scope}[on background layer]
-  \def\divlen{155pt}
+  \def\divlen{144pt}
 
   \node[stepmarker,above=50pt of b4,xshift=+22.0pt] (1) {(1)} edge [stepline] ($ (1.center)-(0,\divlen) $);
 
@@ -1193,7 +1175,7 @@ which cannot occur on the same position of another, \emph{longer} \opidtrace{}.
   \end{scope}
 \end{tikzpicture}
 \caption{
-An operation history which is replicated between two actors A and B that includes
+An operation history which is replicated between two replicas $A$ and $B$ with
 undo and redo operations. For clarity, undo and redo operations are not labeled
 as \restopkind{}s. Their respective anchor operations are indicated by the
 dashed blue arrows and denoted in parentheses.
@@ -1204,7 +1186,7 @@ The dotted lines indicate time steps during which we show the nodes' states in
 
 \newcommand{\ra}[1]{\renewcommand{\arraystretch}{#1}}
 
-\begin{table*}[h!]
+\begin{table*}
   \centering
   \small
   \ra{1.3}
@@ -1294,12 +1276,13 @@ In case a cell contains a reference to another time step, the value is exactly
 the same as in that respective step.
 The difference between (2a) and (2b) is that in (2a) the replicas have not yet
 synced, whereas in (2b) they have exchanged their operations.
-At all other time steps the operations are assumed to be synced.
+At all other time steps the operations are synced.
 }\label{tab:node-states}
 \end{table*}
 
+\textbf{Example.}\label{sec:algo-example}
 \Cref{fig:op-hist-undo-redo} shows an operation history that is replicated
-between two actors $A$ and $B$ that contains undo and redo operations.
+between two replicas $A$ and $B$ that contains undo and redo operations.
 \Cref{tab:node-states} shows the internal node states during the time steps
 from \cref{fig:op-hist-undo-redo}.
 It demonstrates the stack maintenance introduced in \cref{sec:overview} and
@@ -1322,55 +1305,36 @@ The \undop{7}{B}{2}{B} operation produces the value $1$ with an \opidtrace{} of
 \stack{\opid{7}{B},\opid{1}{A}}.
 The \setop{7}{A}{6} operation immediately yields the value $6$ with an
 \opidtrace{} of \stack{\opid{7}{A}}.
-If there was no \opidtrace{} and instead the \glspl*{opid} of the terminal
-operations were used, the values produced by the undo operation would
-always lose against the concurrent set operation because the \glspl*{opid} of the
-terminal operations are always smaller than the \gls*{opid} of the concurrent
-set operation due the traversal of the predecessor relation.
-To fix this unfairness, the \opidtrace{} is employed to sort values produced by
-\emph{different heads} by their head's \glspl*{opid} and
-values produced by the \emph{same head}
-by their first deviation in the \opidtrace{}.
+If the values were sorted by taking only their \setopkind{}s into account,
+the values from a \restopkind{} would always be sorted after
+the values from concurrent \setopkind{}s (yielding $[6, 1]$ for the example).
+To fix this unfairness, the \opidtrace{} sorts values produced by
+\emph{different heads} by their head's \glspl*{opid}
+and values produced by the \emph{same head}
+by their first deviation in the \opidtrace{} (resulting in $[1, 6]$).
 
-Finally, at (4) $A$ is giving up its ability to redo because its terminal
-operation \setop{7}{A}{6} clears the redo stack, rendering $A$ unable to redo its
-previously undone \setop{3}{A}{4} operation.
+Finally, at (4) $A$ is giving up its ability to redo because its
+\setop{7}{A}{6} operation clears the redo stack,
+rendering $A$ unable to redo its previously undone \setop{3}{A}{4} operation.
 
-\section{Optimization}\label{sec:opt}
-
-%% TODO: put this in the evaluation section?
-
-We can make use of two observations to optimize the algorithm:
-First, the predecessors of an operation remain constant after their generation.
-Incoming concurrent operations may have existing operations as their predecessors
-but they never update the predecessors of existing operations.
-Second, a \restopkind{}'s anchor is also fixed at generation time.
-As explained in \cref{sec:evaluation}, there are degenerate cases in which after
-following the anchor and resolving its predecessors, one predecessor is another
-\restopkind{} and the same pattern repeats for a few iterations,
-leading to a non-constant runtime.
-Yet, due to the two key observations above, we are resolving the exact same values
-for a \restopkind{} which we have already resolved at the time it was the head of
-the operation history.
-Hence, we can harness caching to improve the runtime at the expense of an
-increased memory overhead.
+\textbf{Optimization.}\label{sec:opt}
+To optimize the algorithm note that the predecessors of an operation and the
+anchor of a \restopkind{} do not change as further operations are applied.
+Hence, we can cache the result of the traversal from a given head
+to improve the runtime at the cost of an increased memory overhead.
 
 For each \restopkind{} we cache the values produced by it in sorted order.
-As soon we have stored the sorted order, we can even drop the \opidtrace{} and rely
-on a \emph{stable} sort algorithm to include the sorted values of a \restopkind{}
-at the right position with just the \opidtrace{} up to the \restopkind{}'s \gls*{opid}.
-This works because if a \restopkind{} produces multiple values, the part of the \opidtrace{}
-going beyond the \restopkind{} is responsible for sorting the values it produces.
-Storing the values in sorted order makes that part of the \opidtrace{} redundant.
-Only the first part of the \opidtrace{} up to the \restopkind{} is important for figuring
-out the relation of the cached values with other values contributed by other operations.
-However, this requires the sorting algorithm to be stable.
+As soon we store the sorted order, we can additionally drop the
+\opidtrace{} and rely on a \emph{stable} sort algorithm to include the sorted
+values of a \restopkind{} at the right position with just the \opidtrace{}
+up to the \restopkind{}'s \gls*{opid}.
+This works because if a \restopkind{} produces multiple values,
+the suffix of the \opidtrace{} starting from the \restopkind{} is responsible
+for sorting the values it produces, but not responsible for
+determining the sorting of the values w.r.t. other values contributed by different
+heads, for which the remaining prefix of the \opidtrace{} is responsible.
 
 \section{Evaluation}\label{sec:evaluation}
-
-% Explain the high-level research questions
-% Experimental testbed, benchmarks, methodology
-% Evaluate the research questions/hypotheses
 
 % \begin{figure*}[ht!]
 % \centering
@@ -1394,354 +1358,317 @@ However, this requires the sorting algorithm to be stable.
 % }\label{fig:degenerate-op-sequence}
 % \end{figure*}
 
-To evaluate the correctness of our algorithm, we demonstrate that it converges,
-and we check the behavior of our reference implementation with a suite of unit tests.
-To evaluate its performance, we analyze its runtime complexity for relevant
-undo and redo scenarios and provide benchmarking results.
-Finally, we discuss its integration with Automerge.
-
 \textbf{Correctness}.
-We demonstrate that any two replicas that have received the same set of
-operations converge to the same state.
-The same set of operations produce the same operation history on both
-replicas over which the algorithms from \cref{sec:implementation} are applied.
-Since the algorithms are deterministic and do not depend on the order in which
-operations were received, they produce the same value(s) on both
-replicas, given that they terminate.
-\Cref{alg:gen-values}'s termination is trivial since it sorts and then
-maps a finite set of operations.
-The termination of the comparison function from \cref{alg:comparison-fn} is
-guaranteed by the fact that \opidtrace{}s are finite
-(due to the operation history being finite).
-\Cref{alg:core-alg}'s termination is a bit more involved.
-If all heads are terminal operations, termination is trivial as in the 
-while loop, the length of the \textit{todo} list decreases by one in every iteration
-and no element is inserted.
-When dealing with \restopkind{}s, in every iteration of the while loop
-the length of the \textit{todo} list also decreases by one but it also 
-increases by the number of predecessors of the anchor operation.
-Yet, due to the operation history being finite, cycle-free and \autoref{alg:core-alg}
-going only backwards in time but never forwards
-(by following the predecessor relation in case of \restopkind{}s),
-termination is guaranteed.
-Therefore, the algorithm converges to the same state on both replicas.
+Two replicas that have received the same set of
+operations converge to the same state because our algorithm is deterministic,
+traverses a finite and cycle-free predecessor relationship,
+and does not depend on the order in which operations were received.
 
-The reference implementation is written in Typescript and consists of around 350
-lines of code (excluding comments and blank lines),
-implementing an \gls*{mvr} with undo and redo functionality as described
-in \cref{sec:background,sec:overview,sec:implementation}.
-The implementation is tested against a set of unit tests that covers important
+Our implementation of the algorithm is written in Typescript and
+consists of around 350 lines of code (excluding comments and blank lines),
+implementing a \gls*{mvr} with undo and redo.
+We test it against a suite of unit tests that covers important
 scenarios, both in single-user and multi-user cases.
-In total there are 30 unit tests,
-comprising of around 640 lines of test code (also excluding comments and blank lines).
+There are 30 unit tests, comprising over 600 lines of test code.
 
 \textbf{Performance}.
-\autoref{alg:gen-values}'s runtime is entirely driven by the
-complexity of sorting the terminal operations and \cref{alg:comparison-fn}'s
-runtime is linear in the length of the shorter \opidtrace{}.
-To assess \autoref{alg:core-alg}'s runtime,
-we look at the runtime of resolving the different operation kinds,
-\setopkind{} and \restopkind{}.
-To ease the analysis, we ignore any complexity arising from dealing with
-data structures like maps and lists but focus on the iterations
-of the while loop in lines 4-12.
-In case of a \setopkind{}, the runtime is constant as the while loop
-does not add an element to the \textit{todo} list but just removes the
-\setopkind{} from the list.
+The runtime cost of our algorithm is determined by the graph traversal that
+resolves \restopkind{}s at the heads into the corresponding register values.
+In case of a \setopkind{} at the head, the runtime of \cref{alg:core-alg}
+is constant as the while loop does not add an element to the \textit{todo} list,
+but just removes the \setopkind{} from the list.
 
-For \restopkind{}s, we push all $k$ predecessors of the referenced anchor operation
-to the \textit{todo} list and therefore have to process $k$ more operations.
-Some of these $k$ operations may be \setopkind{}s which end the search but
-some may be \restopkind{}s themselves. 
-Then, the process repeats until a terminal operation is found or
-roots are reached that cannot add any predecessors to the \textit{todo} list.
-The amount of predecessors depends on the degree of concurrency in the system.
-We restrict the analysis to linear operation histories and therefore assume
-that there is just one predecessor of a \restopkind{}.
-Nevertheless, the following arguments can still be applied for each branch
-introduced by a predecessor of a \restopkind{}, albeit with a shorter length.
+% For \restopkind{}s, we push all $k$ predecessors of the referenced anchor operation
+% to the \textit{todo} list and therefore have to process $k$ more operations.
+% Some of these $k$ operations may be \setopkind{}s which end the search but
+% some may be \restopkind{}s themselves. 
+% Then, the process repeats until a terminal operation is found or
+% roots are reached that cannot add any predecessors to the \textit{todo} list.
+% The amount of predecessors depends on the degree of concurrency in the system.
+% We restrict the analysis to linear operation histories and therefore assume
+% that there is just one predecessor of a \restopkind{}.
+% Nevertheless, the following arguments can still be applied for each branch
+% introduced by a predecessor of a \restopkind{}, albeit with a shorter length.
 
-In most practical editing scenarios,
-the resolution of a \restopkind{} head to a value happens in constant time.
-For example, if a user performs $n$ undo operations (to see prior document states)
-followed by $m \leq n$ redo operations (to return to one of the document states),
-the resolution of each undo and redo operation happens in constant time,
-provided that the anchor operations' predecessor of the $n$ undo operations
-are all terminal operations.
-In that case each undo operation resolves to a terminal operation in two iterations
-(one for its \restopkind{} and its anchor's predecessor (a terminal operation))
-and each redo operation resolves
-to a terminal operation in three iterations
-(one for its \restopkind{}, its anchor's
-predecessor (an undo operation) and that undo operation's predecessor of its anchor
-(a terminal operation)).
+% In most practical editing scenarios,
+% the resolution of a \restopkind{} head to a value happens in constant time.
+% For example, if a user performs $n$ undo operations (to see prior document states)
+% followed by $m \leq n$ redo operations (to return to one of the document states),
+% the resolution of each undo and redo operation happens in constant time,
+% provided that the anchor operations' predecessor of the $n$ undo operations
+% are all terminal operations.
+% In that case each undo operation resolves to a terminal operation in two iterations
+% (one for its \restopkind{} and its anchor's predecessor (a terminal operation))
+% and each redo operation resolves
+% to a terminal operation in three iterations
+% (one for its \restopkind{}, its anchor's
+% predecessor (an undo operation) and that undo operation's predecessor of its anchor
+% (a terminal operation)).
 
-However, there are scenarios where the resolution of a \restopkind{} head
-to a value is not constant but linear in the length
-of the (per assumption linear) operation history.
-\Cref{fig:degenerate-op-sequence} shows such a scenario where a single actor
-produces an operation history of alternating undo-redo operations.
-For resolving the head of a sequence of alternating undo-redo operations
-of length $n$ (counting one undo-redo-pair as one),
-the algorithm has to iterate $n$ times to find the terminal operation.
-Yet, only the resolution of a redo operation suffers from this whereas
-the resolution of an undo operation still happens in constant time.
-The same effect can be created by alternating set and undo operations.
-Yet in practice, this is not a real concern as we expect the lengths of such
-degenerate sequences to be limited as undo and redo is a human-facing feature.
-More importantly, we think that neither alternating undo and redo
-nor set and undo operations is a common use case.
+% However, there are scenarios where the resolution of a \restopkind{} head
+% to a value is not constant but linear in the length
+% of the (per assumption linear) operation history.
+% \Cref{fig:degenerate-op-sequence} shows such a scenario where a single replica
+% produces an operation history of alternating undo-redo operations.
+% For resolving the head of a sequence of alternating undo-redo operations
+% of length $n$ (counting one undo-redo-pair as one),
+% the algorithm has to iterate $n$ times to find the terminal operation.
+% Yet, only the resolution of a redo operation suffers from this whereas
+% the resolution of an undo operation still happens in constant time.
+% The same effect can be created by alternating set and undo operations.
+% Yet in practice, this is not a real concern as we expect the lengths of such
+% degenerate sequences to be limited as undo and redo is a human-facing feature.
+% More importantly, we think that neither alternating undo and redo
+% nor set and undo operations is a common use case.
 
-Benchmarks of our reference implementation support these findings.
-\Cref{fig:runtime-cons-undo-redo} and \cref{fig:runtime-undo-redo-alt} measure
-the runtime in two different scenarios for undo and redo.
-Each data point shows the mean runtime over 1024 runs.
-The benchmarking was conducted on a 2019 MacBook Pro with a 
-2.6 GHz 6-Core Intel Core i7 processor and Node version 18.17.1.
+% Benchmarks of our reference implementation support these findings.
+% \Cref{fig:runtime-cons-undo-redo} and \cref{fig:runtime-undo-redo-alt} measure
+% the runtime in two different scenarios for undo and redo.
+% Each data point shows the mean runtime over 1024 runs.
+% The benchmarking was conducted on a 2019 MacBook Pro with a 
+% 2.6 GHz 6-Core Intel Core i7 processor and Node version 18.17.1.
 
-\begin{figure}
-  \begin{tikzpicture}
-  \begin{axis}[
-    xlabel={Length of undo/redo sequence ($n$)},
-    ylabel={Runtime in ms},
-    xmin=0,
-    axis x line=bottom,
-    axis y line=left,
-    ymin=0,
-    ymax=0.01,
-    legend pos=north east,
-    ymajorgrids=true,
-    yticklabel style={
-      /pgf/number format/fixed,
-      /pgf/number format/precision=5
-    },
-    scaled y ticks=false 
-  ]
+% \begin{figure}
+%   \begin{tikzpicture}
+%   \begin{axis}[
+%     xlabel={Length of undo/redo sequence ($n$)},
+%     ylabel={Runtime in ms},
+%     xmin=0,
+%     axis x line=bottom,
+%     axis y line=left,
+%     ymin=0,
+%     ymax=0.01,
+%     legend pos=north east,
+%     ymajorgrids=true,
+%     yticklabel style={
+%       /pgf/number format/fixed,
+%       /pgf/number format/precision=5
+%     },
+%     scaled y ticks=false 
+%   ]
 
-  % undo data
-  \addplot[
-    color=blue,
-  ] coordinates {
-(1, 0.006290340563282371)
-(2, 0.003907741687726229)
-(3, 0.002766803983831778)
-(4, 0.0017496687069069594)
-(5, 0.0016760083672124892)
-(6, 0.001955396990524605)
-(7, 0.001345782628050074)
-(8, 0.0019154881010763347)
-(9, 0.0013770495424978435)
-(10, 0.001276014547329396)
-(11, 0.0015485882759094238)
-(12, 0.0013692353677470237)
-(13, 0.0013271856296341866)
-(14, 0.0013679209514521062)
-(15, 0.001304528908804059)
-(16, 0.0013366359926294535)
-(17, 0.0013435808941721916)
-(18, 0.00134780234657228)
-(19, 0.0014081033586990088)
-(20, 0.0013913525617681444)
-(21, 0.0013268127804622054)
-(22, 0.001440957625163719)
-(23, 0.0016200695536099374)
-(24, 0.0016375818522647023)
-(25, 0.0013710299390368164)
-(26, 0.0013164350239094347)
-(27, 0.0014119130210019648)
-(28, 0.0013253243814688176)
-(29, 0.0013492428988683969)
-(30, 0.0013712448126170784)
-(31, 0.0014037845248822123)
-(32, 0.0013481056957971305)
-(33, 0.0013890777481719851)
-(34, 0.0013086109538562596)
-(35, 0.001314542896579951)
-(36, 0.0015176087035797536)
-(37, 0.0013542969536501914)
-(38, 0.0013883131032343954)
-(39, 0.0013373843976296484)
-(40, 0.0013278163387440145)
-(41, 0.0013506945979315788)
-(42, 0.0016484785883221775)
-(43, 0.0013150325394235551)
-(44, 0.0013713290682062507)
-(45, 0.0012379433319438249)
-(46, 0.0012963268964085728)
-(47, 0.0012237174669280648)
-(48, 0.0012681810767389834)
-(49, 0.001609297381946817)
-(50, 0.0013969987630844116)
-    };
+%   % undo data
+%   \addplot[
+%     color=blue,
+%   ] coordinates {
+% (1, 0.006290340563282371)
+% (2, 0.003907741687726229)
+% (3, 0.002766803983831778)
+% (4, 0.0017496687069069594)
+% (5, 0.0016760083672124892)
+% (6, 0.001955396990524605)
+% (7, 0.001345782628050074)
+% (8, 0.0019154881010763347)
+% (9, 0.0013770495424978435)
+% (10, 0.001276014547329396)
+% (11, 0.0015485882759094238)
+% (12, 0.0013692353677470237)
+% (13, 0.0013271856296341866)
+% (14, 0.0013679209514521062)
+% (15, 0.001304528908804059)
+% (16, 0.0013366359926294535)
+% (17, 0.0013435808941721916)
+% (18, 0.00134780234657228)
+% (19, 0.0014081033586990088)
+% (20, 0.0013913525617681444)
+% (21, 0.0013268127804622054)
+% (22, 0.001440957625163719)
+% (23, 0.0016200695536099374)
+% (24, 0.0016375818522647023)
+% (25, 0.0013710299390368164)
+% (26, 0.0013164350239094347)
+% (27, 0.0014119130210019648)
+% (28, 0.0013253243814688176)
+% (29, 0.0013492428988683969)
+% (30, 0.0013712448126170784)
+% (31, 0.0014037845248822123)
+% (32, 0.0013481056957971305)
+% (33, 0.0013890777481719851)
+% (34, 0.0013086109538562596)
+% (35, 0.001314542896579951)
+% (36, 0.0015176087035797536)
+% (37, 0.0013542969536501914)
+% (38, 0.0013883131032343954)
+% (39, 0.0013373843976296484)
+% (40, 0.0013278163387440145)
+% (41, 0.0013506945979315788)
+% (42, 0.0016484785883221775)
+% (43, 0.0013150325394235551)
+% (44, 0.0013713290682062507)
+% (45, 0.0012379433319438249)
+% (46, 0.0012963268964085728)
+% (47, 0.0012237174669280648)
+% (48, 0.0012681810767389834)
+% (49, 0.001609297381946817)
+% (50, 0.0013969987630844116)
+%     };
 
-  % redo data
-  \addplot[
-    color=red,
-  ] coordinates {
-(1, 0.007437939144438133)
-(2, 0.003633987420471385)
-(3, 0.002511455590138212)
-(4, 0.0022350119543261826)
-(5, 0.0018720132065936923)
-(6, 0.0019328816561028361)
-(7, 0.00187860953155905)
-(8, 0.002103224309394136)
-(9, 0.0023768509563524276)
-(10, 0.001951182057382539)
-(11, 0.0027914689562749118)
-(12, 0.002302225591847673)
-(13, 0.0018702853412833065)
-(14, 0.001864643389126286)
-(15, 0.0019206689321435988)
-(16, 0.0019472866551950574)
-(17, 0.0018687470292206854)
-(18, 0.0019792676030192524)
-(19, 0.002029231225606054)
-(20, 0.001964766182936728)
-(21, 0.0019252107886131853)
-(22, 0.0018749097071122378)
-(23, 0.001866210310254246)
-(24, 0.0018289572326466441)
-(25, 0.0021713866444770247)
-(26, 0.002587106981081888)
-(27, 0.0018908421625383198)
-(28, 0.0018309024162590504)
-(29, 0.0019520004279911518)
-(30, 0.002062761748675257)
-(31, 0.001968364085769281)
-(32, 0.002528973447624594)
-(33, 0.002954049239633605)
-(34, 0.0026645801845006645)
-(35, 0.002441259188344702)
-(36, 0.002502664952771738)
-(37, 0.002708020620048046)
-(38, 0.002156659436877817)
-(39, 0.0021457494294736534)
-(40, 0.0019089243141934276)
-(41, 0.0019161189266014844)
-(42, 0.0019302570726722479)
-(43, 0.004374536831164733)
-(44, 0.0019373227842152119)
-(45, 0.0017444676195736974)
-(46, 0.0018851725617423654)
-(47, 0.001839210162870586)
-(48, 0.0020025315461680293)
-(49, 0.0019971978035755455)
-(50, 0.002073564799502492)
-  };
+%   % redo data
+%   \addplot[
+%     color=red,
+%   ] coordinates {
+% (1, 0.007437939144438133)
+% (2, 0.003633987420471385)
+% (3, 0.002511455590138212)
+% (4, 0.0022350119543261826)
+% (5, 0.0018720132065936923)
+% (6, 0.0019328816561028361)
+% (7, 0.00187860953155905)
+% (8, 0.002103224309394136)
+% (9, 0.0023768509563524276)
+% (10, 0.001951182057382539)
+% (11, 0.0027914689562749118)
+% (12, 0.002302225591847673)
+% (13, 0.0018702853412833065)
+% (14, 0.001864643389126286)
+% (15, 0.0019206689321435988)
+% (16, 0.0019472866551950574)
+% (17, 0.0018687470292206854)
+% (18, 0.0019792676030192524)
+% (19, 0.002029231225606054)
+% (20, 0.001964766182936728)
+% (21, 0.0019252107886131853)
+% (22, 0.0018749097071122378)
+% (23, 0.001866210310254246)
+% (24, 0.0018289572326466441)
+% (25, 0.0021713866444770247)
+% (26, 0.002587106981081888)
+% (27, 0.0018908421625383198)
+% (28, 0.0018309024162590504)
+% (29, 0.0019520004279911518)
+% (30, 0.002062761748675257)
+% (31, 0.001968364085769281)
+% (32, 0.002528973447624594)
+% (33, 0.002954049239633605)
+% (34, 0.0026645801845006645)
+% (35, 0.002441259188344702)
+% (36, 0.002502664952771738)
+% (37, 0.002708020620048046)
+% (38, 0.002156659436877817)
+% (39, 0.0021457494294736534)
+% (40, 0.0019089243141934276)
+% (41, 0.0019161189266014844)
+% (42, 0.0019302570726722479)
+% (43, 0.004374536831164733)
+% (44, 0.0019373227842152119)
+% (45, 0.0017444676195736974)
+% (46, 0.0018851725617423654)
+% (47, 0.001839210162870586)
+% (48, 0.0020025315461680293)
+% (49, 0.0019971978035755455)
+% (50, 0.002073564799502492)
+%   };
 
-  \legend{Undo, Redo}
+%   \legend{Undo, Redo}
 
-  \end{axis}
-  \end{tikzpicture}
-\caption{
-  Runtime of the last undo (redo) operation in a sequence
-  of $n$ consecutive set operations followed by $n$ undo operations
-  ($n$ consecutive set operations followed by $n$ undo operations
-   followed by $n$ redo operations).
-}\label{fig:runtime-cons-undo-redo}
-\end{figure}
+%   \end{axis}
+%   \end{tikzpicture}
+% \caption{
+%   Runtime of the last undo (redo) operation in a sequence
+%   of $n$ consecutive set operations followed by $n$ undo operations
+%   ($n$ consecutive set operations followed by $n$ undo operations
+%    followed by $n$ redo operations).
+% }\label{fig:runtime-cons-undo-redo}
+% \end{figure}
 
-\Cref{fig:runtime-cons-undo-redo} covers the undo-redo-neutrality principle
-from \cref{sec:semantics}.
-For undo operations, the mean runtime of generating and applying an undo
-operation is shown with $n-1$ preceding undo operations
-which are in turn preceded by $n$ set operations, for $n \in \{1,2,\ldots,50\}$.
-For redo operations, the undo sequence is extended by $n$ redo operations.
-Similarly, it shows the mean runtime of generating and applying the last redo
-operation.
-Both undo and redo runtimes are mostly constant and therefore independent of the
-length of the sequence.
-We suspect that the initial spike of both undo and redo is due to Node's
-just-in-time compilation not yet having optimized the code.
-The outlier for redo operations at $n = 43$ may be explained by a garbage collection pause.
-Redo operations take slightly longer than undo operations for two reasons.
-First, a redo operation resolves its anchor operation to a terminal operation
-and puts it onto the undo stack for possibly undoing it later again, whereas
-an undo operation just puts its \restopkind{} onto the redo stack.
-Second, resolving to a terminal operation takes three iterations for a redo operation
-as opposed to just two iterations for an undo operation.
+% \Cref{fig:runtime-cons-undo-redo} covers the undo-redo-neutrality principle
+% from \cref{sec:semantics}.
+% For undo operations, the mean runtime of generating and applying an undo
+% operation is shown with $n-1$ preceding undo operations
+% which are in turn preceded by $n$ set operations, for $n \in \{1,2,\ldots,50\}$.
+% For redo operations, the undo sequence is extended by $n$ redo operations.
+% Similarly, it shows the mean runtime of generating and applying the last redo
+% operation.
+% Both undo and redo runtimes are mostly constant and therefore independent of the
+% length of the sequence.
+% We suspect that the initial spike of both undo and redo is due to Node's
+% just-in-time compilation not yet having optimized the code.
+% The outlier for redo operations at $n = 43$ may be explained by a garbage collection pause.
+% Redo operations take slightly longer than undo operations for two reasons.
+% First, a redo operation resolves its anchor operation to a terminal operation
+% and puts it onto the undo stack for possibly undoing it later again, whereas
+% an undo operation just puts its \restopkind{} onto the redo stack.
+% Second, resolving to a terminal operation takes three iterations for a redo operation
+% as opposed to just two iterations for an undo operation.
 
-\begin{figure}
-\begin{tikzpicture}
-\begin{axis}[
-  ybar,
-  ylabel={Runtime in ms},
-  axis y line=left,
-  ymin = 0,
-  xlabel={Length of alternating undo-redo sequence ($n$)},
-  axis x line=bottom,
-  symbolic x coords={200, 400, 600, 800},
-  ymajorgrids=true,
-  yminorgrids=true,
-  enlarge x limits = 0.2,
-  legend pos = north west,
-] 
+% \begin{figure}
+% \begin{tikzpicture}
+% \begin{axis}[
+%   ybar,
+%   ylabel={Runtime in ms},
+%   axis y line=left,
+%   ymin = 0,
+%   xlabel={Length of alternating undo-redo sequence ($n$)},
+%   axis x line=bottom,
+%   symbolic x coords={200, 400, 600, 800},
+%   ymajorgrids=true,
+%   yminorgrids=true,
+%   enlarge x limits = 0.2,
+%   legend pos = north west,
+% ] 
 
-% undo
-\addplot+ coordinates {
-(200, 0.00504857866326347)
-(400, 0.005509669485036284)
-(600, 0.006512108666356653)
-(800, 0.007120864116586745)
-};
+% % undo
+% \addplot+ coordinates {
+% (200, 0.00504857866326347)
+% (400, 0.005509669485036284)
+% (600, 0.006512108666356653)
+% (800, 0.007120864116586745)
+% };
 
-% redo without cache opt
-\addplot+ coordinates {
-(200, 0.11390662190387957)
-(400, 0.3034253417572472)
-(600, 0.5630059454997536)
-(800, 0.9230491668859031)
-}; 
+% % redo without cache opt
+% \addplot+ coordinates {
+% (200, 0.11390662190387957)
+% (400, 0.3034253417572472)
+% (600, 0.5630059454997536)
+% (800, 0.9230491668859031)
+% }; 
 
-% redo with cache opt
-\addplot+ coordinates {
-(200, 0.0034364885359536856)
-(400, 0.00369966629659757)
-(600, 0.0026536431978456676)
-(800, 0.0034199498768430203)
-};
+% % redo with cache opt
+% \addplot+ coordinates {
+% (200, 0.0034364885359536856)
+% (400, 0.00369966629659757)
+% (600, 0.0026536431978456676)
+% (800, 0.0034199498768430203)
+% };
 
-\legend{Undo, Redo, Redo + Caching};
-\end{axis} 
-\end{tikzpicture} 
-\caption{
-  Runtime of the last undo/redo operation
-  in a sequence of alternating undo-redo operations of length $n$
-  (counting one undo-redo-pair as one; see \cref{fig:degenerate-op-sequence}).
-}\label{fig:runtime-undo-redo-alt}
-\end{figure}
+% \legend{Undo, Redo, Redo + Caching};
+% \end{axis} 
+% \end{tikzpicture} 
+% \caption{
+%   Runtime of the last undo/redo operation
+%   in a sequence of alternating undo-redo operations of length $n$
+%   (counting one undo-redo-pair as one; see \cref{fig:degenerate-op-sequence}).
+% }\label{fig:runtime-undo-redo-alt}
+% \end{figure}
 
-\Cref{fig:runtime-undo-redo-alt} illustrates the mean runtime of the last
-undo or redo operation of a sequence of alternating undo-redo operations
-of length $n$ for $n \in \{200, 400, 600, 800\}$.
-This scenario resembles \cref{fig:degenerate-op-sequence}, but with longer sequences,
-and measures the time to generate and apply the head of the sequence.
-As previously discussed, the runtime of undo operations is constant in this
-scenario and not affected by the length of the sequence.
-The runtime of applying redo operations grows linearly with the length of the sequence.
-With $n = 800$, applying the redo head takes 0.9 milliseconds.
-We believe that this does not impact the user experience negatively,
-since the user will not notice a delay of less than a millisecond and the use
-of a compiled language like Rust may further reduce the runtime.
-Finally, we consider an alternating undo-redo sequence of length 800 irrelevant
-in practice.
+% \Cref{fig:runtime-undo-redo-alt} illustrates the mean runtime of the last
+% undo or redo operation of a sequence of alternating undo-redo operations
+% of length $n$ for $n \in \{200, 400, 600, 800\}$.
+% This scenario resembles \cref{fig:degenerate-op-sequence}, but with longer sequences,
+% and measures the time to generate and apply the head of the sequence.
+% As previously discussed, the runtime of undo operations is constant in this
+% scenario and not affected by the length of the sequence.
+% The runtime of applying redo operations grows linearly with the length of the sequence.
+% With $n = 800$, applying the redo head takes 0.9 milliseconds.
+% We believe that this does not impact the user experience negatively,
+% since the user will not notice a delay of less than a millisecond and the use
+% of a compiled language like Rust may further reduce the runtime.
+% Finally, we consider an alternating undo-redo sequence of length 800 irrelevant
+% in practice.
 
 \textbf{Integration with Automerge}.
 Since Automerge stores a monotonically growing set of operations,
 efficient compression of the serialized operation set is an important property.
-Our proposed solution models both undo and redo with a single
-operation kind whose extra payload consists only of a single \gls*{opid}.
-Moreover, the \restopkind{} may also be useful to support global undo
-behavior in addition to local undo in the future.
+Our approach models both undo and redo with a single
+operation type whose extra payload consists only of a single \gls*{opid}.
 Since every undo and redo creates a new \restopkind{} that is added
 to the set,
 the undo and redo stacks are implicitly stored within the operation set and
 can be reconstructed upon loading the document to support undo and redo
-across sessions without any additional persistency overhead.
+across sessions without additional persistency overhead.
 
-Moreover, if an application developer decides not to use undo and redo functionality,
-the value resolution algorithm will be the same as without undo and redo functionality,
+If an application developer does not require undo and redo functionality,
+the value resolution algorithm will be the same as without it,
 thereby not incurring any overhead and making users of the library only
 pay for what they use.
 In terms of space complexity, the additional overhead is the introduced state
@@ -1750,15 +1677,15 @@ just a fraction of the total number of operations of the register and can be
 bounded if arbitrary undo depth support is not required.
 
 Finally, we remark a possibility to prune the history under a special circumstance.
-Imagine a user undoing a few times and then redoing the same amount of times
-just to see the document in the past and then return to the original state.
-We call such a sequence of undo and redo operations effect-free.
-Given that all participating actors have seen the same operations and made no
+Imagine a user undoing a few times and then redoing just as many times
+to see the document in the past and then returning to the original state.
+We call such a sequence of undo and redo effect-free.
+Given that all replicas have seen the same operations and made no
 changes to the register within the effect-free sequence,
 the sequence can be pruned (garbage collected) from the history.
 However, before doing so causal stability~\cite{baquero2017pure}
 must be reached, that is, all
-actors must have sent an operation whose predecessor set contains the
+replicas must have sent an operation whose predecessor set contains the
 highest \gls*{opid} of the effect-free sequence.
 
 \section{Related Work}\label{sec:related-work}
@@ -1960,12 +1887,12 @@ by traversing operation histories represented as directed acyclic graphs.
 The Automerge \gls{crdt} implementation already stores such an operation graph
 to allow past states of a document to be inspected;
 therefore our algorithm does not incur any additional overhead in this context.
-The implementation of our algorithm is currently a standalone prototype
-written in Typescript, but we plan to integrate it into Automerge in the future.
+The implementation of our algorithm is currently a standalone prototype,
+but we plan to integrate it into Automerge in the future.
 We believe that our algorithm can also be generalized from a single \gls{mvr}
 to more complex \glspl{crdt}, for example by treating every key in a map and
-every element in a list as a \gls{mvr}, and by using (respectively) one shared
-undo and redo stack for all \glspl{mvr} in the entire data structure.
+every element in a list as a \gls{mvr}, and by using shared
+undo and redo stacks for all \glspl{mvr} in the entire data structure.
 
 %%
 %% Print the bibliography
@@ -1997,7 +1924,7 @@ undo and redo stack for all \glspl{mvr} in the entire data structure.
 % We call such operations \emph{out-of-order delivered and behind the undo cursor}.
 % This leaves the question of how to treat these operations.
 % A potential solution is to turn the undo stack into a priority queue and
-% then undo the operation at the time of arrival at the undoing actor but
+% then undo the operation at the time of arrival at the undoing replica but
 % that may cause hard to understand jumps in time for users.
 % Another option is to ignore these operations but that poses the issue of
 % how to deal with them upon subsequent redos.
@@ -2023,16 +1950,16 @@ undo and redo stack for all \glspl{mvr} in the entire data structure.
 % However, the out of order delivery issue remains for both total and
 % partial orders.
 % In contrast, local undo restricts the undoable operations to the subset of
-% the actor's own operations which are always delivered in order at each actor,
+% the replica's own operations which are always delivered in order at each replica,
 % and thereby does not suffer from this problem.
 
 % \subsection{Metadata Overhead}
 
 % Local undo partitions the set of operations into disjoint sets,
-% one set for each actor.
-% Since an actor can only undo her own operations,
+% one set for each replica.
+% Since a replica can only undo her own operations,
 % it cannot happen that concurrently the same operation is undone multiple times,
-% or that the same operation is both undone and redone by different actors.
+% or that the same operation is both undone and redone by different replicas.
 % While it certainly is possible to design some data structure to account for this,
 % it increases the complexity and overhead of the algorithm.
 
