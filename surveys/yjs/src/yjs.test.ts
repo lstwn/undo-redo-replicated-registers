@@ -12,8 +12,8 @@ const createReplica = (
   trackedOrigins?: Set<any>,
 ): Replica => {
   const doc = new Y.Doc();
-  // fix the client id for having deterministic outcomes for concurrent
-  // updates according to
+  // fix the client id for having deterministic outcomes in case of
+  // concurrent updates, according to:
   // https://github.com/yjs/docs/blob/main/api/faq.md#i-get-a-new-clientid-for-every-session-is-there-a-way-to-make-it-static-for-a-peer-accessing-the-document
   doc.clientID = id;
   const map = doc.getMap("map");
@@ -79,8 +79,9 @@ describe("LWW support only", () => {
 
     sync(replicaA, replicaB);
 
+    // replicaB is the winner because of the greater clientId
     expect(getRegisters(replicaA, replicaB)).toEqual([2, 2]);
-    // no way to recover replicaA's update to `1`
+    // no way to access replicaA's concurrent update to `1`
   });
 });
 
@@ -160,18 +161,17 @@ describe("undo behavior with filtered origins for trying to achieve local undo",
     // replicaA should not be undoing replicaB's change here, but instead
     // it's own last one, i.e., setting from 0 -> 1
     replicaA.undoMngr.undo();
-    // interestingly A's ability to undo is blocked here...
+    // however, A's ability to undo is blocked here...
     expect(getRegisters(replicaA, replicaB)).toEqual([2, 2]);
-    // hence, local undo behavior is not possible as remote changes block
-    // the ability to undo
+    // ...hence, local undo behavior is not possible as changes from non-tracked
+    // origins block the ability to undo
     expect(replicaA.undoMngr.canUndo()).toEqual(false);
 
-    // sync the failed undo attempt, should have no effect
+    // "sync" the failed undo attempt, should have no effect
     sync(replicaA, replicaB);
     expect(getRegisters(replicaA, replicaB)).toEqual([2, 2]);
 
-    // B can still unde as it is the replica who owns
-    // the current value of the LWW
+    // B can still undo as it is the replica who issued the LWWR's most recent value
     expect(replicaB.undoMngr.canUndo()).toEqual(true);
   });
 });
