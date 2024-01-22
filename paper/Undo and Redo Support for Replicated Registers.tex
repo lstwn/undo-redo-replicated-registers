@@ -78,7 +78,7 @@
   op/.style={
     font=\footnotesize,
     state,
-    minimum size=40pt,
+    minimum size=42.5pt,
     fill=white,
   },
   head/.style={
@@ -136,11 +136,11 @@
 \newcommand*{\fullref}[1]{\hyperref[{#1}]{\autoref*{#1}}}
 \newcommand{\op}[3][op]{$\mathit{#1}_{#2}^{#3}$} % with op kind
 \newcommand{\opid}[2]{$\mathit{_{#1}^{#2}}$}
-\newcommand{\setop}[4][set]{$\mathit{#1_{#2}^{#3}}{(#4)}$}
-\newcommand{\delop}[3][del]{$\mathit{#1_{#2}^{#3}}{()}$}
-\newcommand{\undop}[5][undo]{$\mathit{#1_{#2}^{#3}}{(_{#4}^{#5})}$}
-\newcommand{\redop}[5][redo]{$\mathit{#1_{#2}^{#3}}{(_{#4}^{#5})}$}
-\newcommand{\restop}[5][rest]{$\mathit{#1_{#2}^{#3}}{(_{#4}^{#5})}$}
+\newcommand{\setop}[4][set]{$\mathit{#1_{#2}^{#3}(#4)}$}
+\newcommand{\delop}[3][del]{$\mathit{#1_{#2}^{#3}()}$}
+\newcommand{\undop}[5][undo]{$\mathit{#1_{#2}^{#3}(_{#4}^{#5})}$}
+\newcommand{\redop}[5][redo]{$\mathit{#1_{#2}^{#3}(_{#4}^{#5})}$}
+\newcommand{\restop}[5][rest]{$\mathit{#1_{#2}^{#3}(_{#4}^{#5})}$}
 \newcommand{\stack}[1]{$[$#1$]$}
 \def\setabbr{s}
 \def\restabbr{rs}
@@ -1129,24 +1129,24 @@ which cannot occur on the same position of another, \emph{longer} \opidtrace{}.
   \node[op,right of=b8] (b9) {\redop{9}{B}{6}{B}} edge [pred] (b8) edge [anchorref,bend right=30] (b6);
 
   \begin{scope}[on background layer]
-  \node[op,right of=b9] (b10) {\redop{10}{B}{5}{B}} edge [pred] (b9) edge [anchorref,] (b5);
+  \node[op,right of=b9] (b10) {\redop{10}{B}{5}{B}} edge [pred] (b9) edge [anchorref,bend right=4] (b5);
   \end{scope}
 
   % step marker and step lines
   \begin{scope}[on background layer]
   \def\divlen{144pt}
 
-  \node[stepmarker,above=50pt of b4,xshift=+22.0pt] (1) {(1)} edge [stepline] ($ (1.center)-(0,\divlen) $);
+  \node[stepmarker,above=50pt of b4,xshift=+23.0pt] (1) {(1)} edge [stepline] ($ (1.center)-(0,\divlen) $);
 
-  \node[stepmarker,right=19.0pt of 1] (2a2b) {(2a) (2b)} edge [stepline] ($ (2a2b.center)-(0,\divlen) $);
+  \node[stepmarker,right=21.0pt of 1] (2a2b) {(2a) (2b)} edge [stepline] ($ (2a2b.center)-(0,\divlen) $);
 
-  \node[stepmarker,right=18.0pt of 2a2b] (3) {(3)} edge [stepline] ($ (3.center)-(0,\divlen) $);
+  \node[stepmarker,right=21.5pt of 2a2b] (3) {(3)} edge [stepline] ($ (3.center)-(0,\divlen) $);
 
-  \node[stepmarker,right=28.0pt of 3] (4) {(4)} edge [stepline] ($ (4.center)-(0,\divlen) $);
+  \node[stepmarker,right=30.5pt of 3] (4) {(4)} edge [stepline] ($ (4.center)-(0,\divlen) $);
 
-  \node[stepmarker,right=32.0pt of 4] (5) {(5)} edge [stepline] ($ (5.center)-(0,\divlen) $);
+  \node[stepmarker,right=33.5pt of 4] (5) {(5)} edge [stepline] ($ (5.center)-(0,\divlen) $);
 
-  \node[stepmarker,right=33.5pt of 5] (6) {(6)} edge [stepline] ($ (6.center)-(0,\divlen) $);
+  \node[stepmarker,right=34.5pt of 5] (6) {(6)} edge [stepline] ($ (6.center)-(0,\divlen) $);
 
   \node[stepmarker,right=32.0pt of 6] (7) {(7)} edge [stepline] ($ (7.center)-(0,\divlen) $);
 
@@ -1305,7 +1305,8 @@ Then, we can additionally drop the values'
 \opidtrace{}s and rely on a \emph{stable} sort algorithm to include the sorted
 values of a \restopkind{} at the right position among the siblings contributed
 by other heads, as the cached values' sorting w.r.t.\ the other siblings
-is sufficiently determined by the \opidtrace{} up to the cached \restopkind{}.
+is sufficiently determined by the \opidtrace{} starting from a head until the
+cached \restopkind{}.
 
 \section{Evaluation}\label{sec:evaluation}
 
@@ -1555,7 +1556,7 @@ but they assume global undo behavior.
 
 %% TODO: update link below after merging into main
 YJS~\cite{yjspaper,yjsproject} is another popular \gls{crdt} library with
-undo support\footnote{https://docs.yjs.dev/api/undo-manager}.
+undo support\footnote{\url{https://docs.yjs.dev/api/undo-manager}}.
 Since it uses \acrlongpl{lwwr} instead of \glspl{mvr}, concurrent updates are lost.
 Consequently, an undo in YJS does not recover siblings unlike our approach.
 Per default, YJS implements global undo.
@@ -1563,7 +1564,7 @@ While it allows to limit the changes which can be undone by a replica
 by filtering for ``origins'',
 it cannot be used for local undo, as the ability to undo is blocked
 upon receiving a change from a non-filtered
-origin\footnote{https://github.com/lstwn/undo-redo-replicated-registers/blob/1958e1b6abcd88ccd668861b1a71bc28f0873ce1/surveys/yjs/src/yjs.test.ts}.
+origin\footnote{\url{https://github.com/lstwn/undo-redo-replicated-registers/blob/332467e6cec918dd66b92e570ece8e8bfa077b00/surveys/yjs/src/yjs.test.ts}}.
 YJS's implementation uses inverse operations instead of pointers into the
 operation history.
 
