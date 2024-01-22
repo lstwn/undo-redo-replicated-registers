@@ -1,6 +1,4 @@
-%% For camera-ready version:
-% \documentclass[sigconf,natbib=false]{acmart}
-%% For review version:
+%% According to https://papoc-workshop.github.io/2024/cfp.html:
 \documentclass[sigplan,natbib=false,review]{acmart}
 \renewcommand\footnotetextcopyrightpermission[1]{}
 \settopmatter{printfolios=true,printacmref=false}
@@ -185,7 +183,7 @@
 %% other information printed in the page headers. This command allows
 %% the author to define a more concise list
 %% of authors' names for this purpose.
-% \renewcommand{\shortauthors}{Stewen et al.}
+% \renewcommand{\shortauthors}{}
 
 %%
 %% The abstract is a short summary of the work to be presented in the
@@ -252,6 +250,7 @@ semantics that we believe are most consistent with users' expectations.
 %% This command processes the author and affiliation and title
 %% information and builds the first part of the formatted document.
 \maketitle
+\pagestyle{plain}
 
 \section{Introduction}\label{sec:introduction}
 
