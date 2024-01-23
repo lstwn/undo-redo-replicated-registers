@@ -815,7 +815,7 @@ while editing a document, and this is a fairly strong assumption to make.
 assuming that user $A$ has only the upper but not the lower rectangle in her view,
 and vice-versa for user $B$.
 With global undo, $A$ may be surprised to see no immediate effect of her undo
-because it reverted $B$'s green coloring on a different view of the document.
+because it reverted $B$'s green coloring on a different page of the document.
 $B$ may be surprised to learn that her last change was undone for no obvious reason.
 With more users editing collaboratively, the problem exacerbates, as the
 share of remote operations tends to increase.
@@ -837,8 +837,8 @@ a remote operation with a timestamp $t_{op}$ that falls within the
 interval ($t_1 < t_{op} < t_2$).
 It is unclear how an algorithm should handle this situation without leading
 to further unexpected states.
-The fact that most non-\gls{crdt} software chooses local undo over global undo
-despite not being affected by this, makes another case for following their lead.
+The fact that most non-\gls{crdt} software chooses local undo over global undo,
+despite not being affected by this problem, makes another case for following their lead.
 
 \section{Background on MVRs}\label{sec:background}
 
@@ -958,13 +958,14 @@ That basically renders a redo as an ``undo of an undo''.
 \section{Applying Operations}\label{sec:implementation}
 
 Whenever a replica receives a remote operation, it waits for any missing
-ancestors to arrive first, if necessary, and adds it to its operation history.
-We introduce the algorithm that determines the current value(s) of the
+ancestors to arrive first, if necessary, and then adds the new operation to its
+operation history.
+We now introduce the algorithm that determines the current value(s) of the
 register given an operation history containing \setopkind{}s and \restopkind{}s.
 We split the discussion into three smaller units:
-First, we discuss \autoref{alg:core-alg} that resolves the heads of the operation
-history to some terminal heads.
-Second, we present \autoref{alg:gen-values} that maps the resulting terminal
+First, \autoref{alg:core-alg} resolves the heads of the operation
+history to some \emph{terminal heads} (defined below).
+Second, \autoref{alg:gen-values} maps the resulting terminal
 heads to the value(s) of the register.
 To sort the values in the register appropriately, \autoref{alg:comparison-fn}
 defines a comparison function for the terminal heads that \autoref{alg:gen-values}
@@ -998,7 +999,7 @@ utilizes.
 
 \autoref{alg:core-alg} takes the current set of heads of the operation history
 and returns a list of (\setopkind{}, \opidtrace{}) pairs which we
-refer to as terminal heads.
+refer to as \emph{terminal heads}.
 The \opidtrace{} is a list of \glspl*{opid} from the operations that have been
 visited along the path from a head to a \setopkind{}.
 We track the \opidtrace{} so that the register's values contributed
@@ -1042,7 +1043,7 @@ and they may produce $k$ or more siblings.
         \State{$\var{values} \gets ()$}
         \ForAll{$\var{head} \textbf{ in } \var{sortedHeads}$}
           \State{$\var{headOp} \gets \var{head[0]}$}
-          \If{($\var{headOp.value} \neq \var{None}$)}
+          \If{$\var{headOp.value} \neq \var{None}$}
             \State{$\var{values.push(headOp.value)}$}
           \EndIf{}
         \EndFor{}
@@ -1330,6 +1331,8 @@ Since we expect the number of heads to be small for a single register,
 the cost of sorting in \cref{alg:gen-values} is negligible.
 
 \textbf{Integration with Automerge}.
+Our implementation is currently a standalone prototype, but we intend to
+integrate our algorithm into the Automerge CRDT library in the future.
 Since Automerge stores a monotonically growing set of operations,
 efficient compression of the serialized operation set is an important property.
 Our approach models both undo and redo with a single
@@ -1351,7 +1354,7 @@ Finally, we remark a possibility to prune the history under a special circumstan
 Imagine a user undoing a few times and then redoing just as many times
 to see the document in the past and then returning to the original state.
 We call such a sequence of undo and redo effect-free.
-Given that all replicas have seen the same operations and made no
+Provided that all replicas have seen the same operations and made no
 changes to the register within the effect-free sequence,
 the sequence can be pruned (garbage collected) from the history.
 However, before doing so causal stability~\cite{baquero2017pure}
@@ -1530,7 +1533,7 @@ behavior, and focusses on handling concurrent undo and redo of a single operatio
 It does not address the issue of (totally) ordering operations on the undo stack
 with global undo and a \gls{crdt} context.
 
-Dolan~\cite{Dolan2020undoable} is a theoretical work demonstrating
+Theoretical work by Dolan~\cite{Dolan2020undoable} demonstrates
 that any undoable \gls{crdt} is composed of just counters, contradicting our
 results at first glance.
 Their definition of undoable demands that an undo restores the \gls{crdt}
@@ -1548,7 +1551,7 @@ undo support\footnote{\url{https://docs.yjs.dev/api/undo-manager}}.
 Since it uses \acrlongpl{lwwr} instead of \glspl{mvr}, concurrent updates are lost.
 Consequently, an undo in Yjs does not recover siblings unlike our approach.
 Per default, Yjs implements global undo.
-While it allows to limit the changes which can be undone by a replica
+While it allows the changes by a selected replica to be undone
 by filtering for ``origins'',
 it cannot be used for local undo, as the ability to undo is blocked
 upon receiving a change from a non-filtered
