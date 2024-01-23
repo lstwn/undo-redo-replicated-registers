@@ -310,7 +310,6 @@ which is a JSON \gls*{crdt} that is based on \glspl*{mvr}.
     },
     caselabel/.style={
       rectangle,
-      draw,
       fill=white,
       minimum width = 238.5pt,
       % just for left align of text
@@ -321,9 +320,9 @@ which is a JSON \gls*{crdt} that is based on \glspl*{mvr}.
   \def\black{black}
   \def\green{green!60!black}
   \def\red{red}
-  \def\upperoffset{26pt}
-  \def\casemargin{28pt}
-  \def\caselabeldist{5pt}
+  \def\upperoffset{16pt}
+  \def\casemargin{22pt}
+  \def\caselabeldist{1pt}
 
   % two registers, global undo
 
@@ -687,11 +686,6 @@ which is a JSON \gls*{crdt} that is based on \glspl*{mvr}.
 
   \coordinate (d4s) at ($(a4.north)!0.5!(a5.north)+(0,+\upperoffset)$);
   \coordinate (dd4) at ($(e4.south)!0.5!(e5.south)+(0,0)$);
-
-  \draw[stepline] (d1s) -- (da5);
-  \draw[stepline] (d2s) -- (db5);
-  \draw[stepline] (d3s) -- (dc5);
-  \draw[stepline] (d4s) -- (dd4);
 
   \draw (a2.north)+(-0.2cm,+\upperoffset) edge ["A set",optrans] ($(a1.north)+(0,+\upperoffset)$);
   \draw (a3.north)+(-0.2cm,+\upperoffset) edge ["B set",optrans] ($(a2.north)+(0,+\upperoffset)$);
@@ -1513,11 +1507,6 @@ for implementing local undo.
 
   \coordinate (d4s) at ($(a4.north)!0.5!(a5.north)+(0,+\upperoffset)$);
   \coordinate (dd4) at ($(a4.south)!0.5!(a5.south)+(0,0)$);
-
-  \draw[stepline] (d1s) -- (da5);
-  \draw[stepline] (d2s) -- (db5);
-  \draw[stepline] (d3s) -- (dc5);
-  \draw[stepline] (d4s) -- (dd4);
 
   \draw (a2.north)+(-0.2cm,+\upperoffset) edge ["A set",optrans] ($(a1.north)+(0,+\upperoffset)$);
   \draw (a3.north)+(-0.2cm,+\upperoffset) edge ["B set",optrans] ($(a2.north)+(0,+\upperoffset)$);
