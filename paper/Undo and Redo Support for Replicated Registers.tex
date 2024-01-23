@@ -1543,17 +1543,17 @@ only work that also discusses undo and redo in the context of replicated registe
 but they assume global undo behavior.
 
 %% TODO: update link below after merging into main
-YJS~\cite{yjspaper,yjsproject} is another popular \gls{crdt} library with
+Yjs~\cite{yjspaper,yjsproject} is another popular \gls{crdt} library with
 undo support\footnote{\url{https://docs.yjs.dev/api/undo-manager}}.
 Since it uses \acrlongpl{lwwr} instead of \glspl{mvr}, concurrent updates are lost.
-Consequently, an undo in YJS does not recover siblings unlike our approach.
-Per default, YJS implements global undo.
+Consequently, an undo in Yjs does not recover siblings unlike our approach.
+Per default, Yjs implements global undo.
 While it allows to limit the changes which can be undone by a replica
 by filtering for ``origins'',
 it cannot be used for local undo, as the ability to undo is blocked
 upon receiving a change from a non-filtered
 origin\footnote{\url{https://github.com/lstwn/undo-redo-replicated-registers/blob/332467e6cec918dd66b92e570ece8e8bfa077b00/surveys/yjs/src/yjs.test.ts}}.
-YJS's implementation uses inverse operations instead of pointers into the
+Yjs's implementation uses inverse operations instead of pointers into the
 operation history.
 
 \section{Conclusion}\label{sec:conclusion}
