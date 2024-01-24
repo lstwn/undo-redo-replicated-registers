@@ -976,7 +976,7 @@ utilizes.
 \begin{algorithm}
   \caption{Resolve Heads to Terminal Heads}\label{alg:core-alg}
   \begin{algorithmic}[1]
-    \Function{}{$\var{heads}$}
+    \Function{resolveHeads}{$\var{heads}$}
         \State{$\var{todo} \gets ( [\var{head}, ()] \text{ for each } \var{head} \in \var{heads} ) $}
         \State{$\var{termHeads} \gets ()$}
         \While{$\var{todo} \text{ is not empty}$}
@@ -992,7 +992,7 @@ utilizes.
             \EndFor{}
           \EndIf{}
         \EndWhile{}
-        \State{\Return{$\var{termHeads}$}}
+        \State{\Return{\Call{getValues}{$\var{termHeads}$}}}
     \EndFunction{}
   \end{algorithmic}
 \end{algorithm}
@@ -1038,7 +1038,7 @@ and they may produce $k$ or more siblings.
 \begin{algorithm}
   \caption{Resolve Terminal Heads to Value(s)}\label{alg:gen-values}
   \begin{algorithmic}[1]
-    \Function{}{$\var{termHeads}$}
+    \Function{getValues}{$\var{termHeads}$}
         \State{$\var{sortedHeads} \gets sort(\var{termHeads}) \text{ desc using Alg.~\ref{alg:comparison-fn}}$}
         \State{$\var{values} \gets ()$}
         \ForAll{$\var{head} \textbf{ in } \var{sortedHeads}$}
@@ -1064,7 +1064,7 @@ the terminal head is skipped and no value is produced.
 \begin{algorithm}
   \caption{Comparison Function}\label{alg:comparison-fn}
   \begin{algorithmic}[1]
-    \Function{}{$\var{aOpIdTrace}, \var{bOpIdTrace}$}
+    \Function{compare}{$\var{aOpIdTrace}, \var{bOpIdTrace}$}
       \State{$\var{zipped} \gets \mathit{zip}(\var{aOpIdTrace}, \var{bOpIdTrace})$}
       \ForAll{$(aOpId, bOpId) \textbf{ in } \var{zipped}$}
         \If{$aOpId < bOpId$}
@@ -1327,8 +1327,8 @@ With caching, the traversal in case of \restopkind{}s is constant, too,
 because whenever an anchor's predecessor is a \restopkind{},
 its values are already cached in sorted order,
 rendering a deeper traversal redundant.
-Since we expect the number of heads to be small for a single register,
-the cost of sorting in \cref{alg:gen-values} is negligible.
+The cost of sorting in \cref{alg:gen-values} is negligible,
+as we expect the number of heads to be small for a single register,
 
 \textbf{Integration with Automerge}.
 Our implementation is currently a standalone prototype, but we intend to
@@ -1545,7 +1545,6 @@ To the best of our knowledge, Brattli et al.~\cite{Brattli2021undo} is the
 only work that also discusses undo and redo in the context of replicated registers,
 but they assume global undo behavior.
 
-%% TODO: update link below after merging into main
 Yjs~\cite{yjspaper,yjsproject} is another popular \gls{crdt} library with
 undo support\footnote{\url{https://docs.yjs.dev/api/undo-manager}}.
 Since it uses \acrlongpl{lwwr} instead of \glspl{mvr}, concurrent updates are lost.
@@ -1555,7 +1554,7 @@ While it allows the changes by a selected replica to be undone
 by filtering for ``origins'',
 it cannot be used for local undo, as the ability to undo is blocked
 upon receiving a change from a non-filtered
-origin\footnote{\url{https://github.com/lstwn/undo-redo-replicated-registers/blob/332467e6cec918dd66b92e570ece8e8bfa077b00/surveys/yjs/src/yjs.test.ts}}.
+origin\footnote{See \Cref{sec:repro} for documentation of this result.}.
 Yjs's implementation uses inverse operations instead of pointers into the
 operation history.
 
@@ -1571,7 +1570,9 @@ every element in a list as a \gls{mvr}, and by using shared
 undo and redo stacks for all \glspl{mvr} in the entire data structure.
 
 \begin{acks}
-    This work was done while Martin Kleppmann was at the Technical University of Munich, funded by the Volkswagen Foundation and crowdfunding supporters including Mintter and SoftwareMill.
+This work was done while Martin Kleppmann was at the Technical University of Munich,
+funded by the Volkswagen Foundation and crowdfunding supporters including Mintter
+and SoftwareMill.
 \end{acks}
 
 
@@ -1581,7 +1582,17 @@ undo and redo stacks for all \glspl{mvr} in the entire data structure.
 
 %%
 %% If your work has an appendix, this is the place to put it.
-% \appendix
+\appendix
+
+\section{Reproducibility}\label{sec:repro}
+
+We provide all artifacts of this research on GitHub\footnote{
+  \url{}
+}.
+This gives access to our prototype implementation, its test suite,
+\LaTeX{} sources, and documents the surveys of other software
+we have conducted.
+Yjs' undo behavior is recorded with unit tests.
 
 \end{document}
 \endinput
