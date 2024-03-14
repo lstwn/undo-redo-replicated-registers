@@ -93,7 +93,7 @@
   anchorref/.style={
     edge,
     blue,
-    dashed,
+    densely dashed,
   },
   stepmarker/.style={
     font=\footnotesize,
@@ -830,7 +830,7 @@ Local undo does not suffer from this problem, since users can only undo
 their own operations.
 Finally, global undo presumes that users agree on a total order of operations.
 If the total order is determined by (logical) timestamps on operations,
-this order is cannot be final.
+this order cannot be final.
 Then, it is possible that a user undoes the operations
 it knows in some timestamp interval $[t_1, t_2]$, and subsequently receives
 a remote operation with a timestamp $t_{op}$ that falls within the
@@ -957,9 +957,9 @@ That basically renders a redo as an ``undo of an undo''.
 
 \section{Applying Operations}\label{sec:implementation}
 
-Whenever a replica receives a remote operation, it waits for any missing
-ancestors to arrive first, if necessary, and then adds the new operation to its
-operation history.
+Whenever a replica receives a remote operation,
+it buffers it until all its ancestors have been processed,
+before adding the new operation to its operation history.
 We now introduce the algorithm that determines the current value(s) of the
 register given an operation history containing \setopkind{}s and \restopkind{}s.
 We split the discussion into three smaller units:
