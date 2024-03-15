@@ -1,5 +1,5 @@
 %% According to https://papoc-workshop.github.io/2024/cfp.html:
-\documentclass[sigplan,natbib=false]{acmart}
+\documentclass[sigplan]{acmart}
 \renewcommand\footnotetextcopyrightpermission[1]{}
 \settopmatter{printfolios=true,printacmref=false}
 
@@ -29,34 +29,6 @@
 %%
 %% For managing citations, it is recommended to use bibliography
 %% files in BibTeX format.
-%%
-%% You can then either use BibTeX with the ACM-Reference-Format style,
-%% or BibLaTeX with the acmnumeric or acmauthoryear sytles, that include
-%% support for advanced citation of software artefact from the
-%% biblatex-software package, also separately available on CTAN.
-%%
-%% Look at the sample-*-biblatex.tex files for templates showcasing
-%% the biblatex styles.
-%%
-
-
-%%
-%% The majority of ACM publications use numbered citations and
-%% references, obtained by selecting the acmnumeric BibLaTeX style.
-%% The acmauthoryear BibLaTeX style switches to the "author year" style.
-%%
-%% If you are preparing content for an event
-%% sponsored by ACM SIGGRAPH, you must use the acmauthoryear style of
-%% citations and references.
-%%
-%% Bibliography style
-\RequirePackage[
-  datamodel=acmdatamodel,
-  style=acmnumeric,
-  ]{biblatex}
-
-%% Declare bibliography sources (one \addbibresource command per source)
-\addbibresource{references.bib}
 
 %% My extra packages:
 \usepackage{pgfplots} 
@@ -1580,7 +1552,8 @@ and SoftwareMill.
 
 %%
 %% Print the bibliography
-\printbibliography
+\bibliographystyle{ACM-Reference-Format}
+\bibliography{references}
 
 %%
 %% If your work has an appendix, this is the place to put it.
