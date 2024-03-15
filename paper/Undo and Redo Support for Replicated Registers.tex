@@ -1,5 +1,5 @@
 %% According to https://papoc-workshop.github.io/2024/cfp.html:
-\documentclass[sigplan,natbib=false,review]{acmart}
+\documentclass[sigplan,natbib=false]{acmart}
 \renewcommand\footnotetextcopyrightpermission[1]{}
 \settopmatter{printfolios=true,printacmref=false}
 
@@ -784,7 +784,7 @@ a rectangle.
 All applications we tested exhibit local undo behavior as shown in
 \cref{fig:intro-example}~\ref{fig:two-reg-local}~and~\ref{fig:one-reg-local},
 except for Miro Boards, which blocks undo every time an operation
-by another user is received, as illustrated
+by another user on the same register is received, as illustrated
 in \cref{fig:intro-example}~\ref{fig:one-reg-block}.
 The most common implementations of multi-user undo for a register
 can be characterized by the following principles:
