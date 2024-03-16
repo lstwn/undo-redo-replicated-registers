@@ -227,7 +227,6 @@ semantics that we believe are most consistent with users' expectations.
 %% This command processes the author and affiliation and title
 %% information and builds the first part of the formatted document.
 \maketitle
-\pagestyle{plain}
 
 \section{Introduction}\label{sec:introduction}
 
@@ -254,7 +253,7 @@ building block to build more complex \glspl*{crdt} via composition.
 The intended environment for this algorithm is the Automerge~\cite{automerge} library,
 which is a JSON \gls*{crdt} that is based on \glspl*{mvr}.
 
-\section{Semantics of Undo/Redo with Multiple Users}\label{sec:semantics}
+\section{Semantics of Multi-User Undo/Redo}\label{sec:semantics}
 
 \begin{figure}
 \centering
@@ -891,7 +890,6 @@ is the \gls*{opid} of an ancestor operation which we call its
 The effect of this operation is to restore the state of the register to the
 state prior to the anchor operation by searching through the operation history.
 \restopkind{}s are used to implement both undo and redo.
-
 Moreover, we require additional state besides the operation history.
 We introduce two stacks, one for undo and one for redo, with the usual
 \acrlong{lifo} semantics.
@@ -1044,10 +1042,8 @@ the terminal head is skipped and no value is produced.
     \Function{compare}{$\var{aOpIdTrace}, \var{bOpIdTrace}$}
       \State{$\var{zipped} \gets \mathit{zip}(\var{aOpIdTrace}, \var{bOpIdTrace})$}
       \ForAll{$(aOpId, bOpId) \textbf{ in } \var{zipped}$}
-        \If{$aOpId < bOpId$}
-          \State{\Return $\var{Less}$}
-        \ElsIf{$aOpId > bOpId$}
-          \State{\Return $\var{Greater}$}
+        \If{$aOpId < bOpId$} \Return $\var{Less}$
+        \ElsIf{$aOpId > bOpId$} \Return $\var{Greater}$
         \EndIf{}
       \EndFor{}
     \EndFunction{}
@@ -1057,16 +1053,16 @@ the terminal head is skipped and no value is produced.
 \Cref{alg:comparison-fn} provides the comparison logic of two \opidtrace{}s
 when sorting the list of terminal heads in line 2 of \cref{alg:gen-values}.
 The \textit{zip()} function takes two lists and returns a list of pairs
-where the first element of the pair is from the first list and the second
-element is from the second list.
+where the first element is from the first list and the second element
+is from the second list.
 If the lists are of different lengths, the longer list is truncated to the
 length of the shorter list.
-The iteration in lines 3-7 always terminates before finishing with
+The for-loop always terminates before finishing with
 its last iteration because of the nature of the \opidtrace{}s.
 If two terminal heads stem from different heads they already differ in their
 first element (the \gls*{opid} of the head).
 If two terminal heads stem from the same head (which then must be a \restopkind{}),
-they might share a common path but their paths eventually diverge for some elements.
+they might share a common path but their paths eventually diverge.
 The \textit{zip()} function's truncation does not harm this property
 as an \opidtrace{}'s last element is always an \gls*{opid} from a \setopkind{}
 which cannot occur on the same position of another, \emph{longer} \opidtrace{}.
@@ -1217,13 +1213,13 @@ The dotted lines indicate time steps during which we show the nodes' states in
 \caption{
 The internal states of the nodes' undo and redo stacks and the values of the register
 at the time steps from \cref{fig:op-hist-undo-redo}.
-A set operation is abbreviated by $\mathit{\setabbr}$ and a restore operation
+A \setopkind{} is abbreviated by $\mathit{\setabbr}$ and a \restopkind{}
 by $\mathit{\restabbr}$
-with its anchor operation denoted within the parentheses.
-In case a cell contains a reference to another time step, the value is exactly
+with its anchor denoted within parentheses.
+If a cell contains a reference to another time step, the value is exactly
 the same as in that respective step.
 The difference between (2a) and (2b) is that in (2a) the replicas have not yet
-synced, whereas in (2b) they have exchanged their operations.
+synced, whereas in (2b) they have synced operations.
 At all other time steps the operations are synced.
 }\label{tab:node-states}
 \end{table*}
@@ -1304,7 +1300,7 @@ because whenever an anchor's predecessor is a \restopkind{},
 its values are already cached in sorted order,
 rendering a deeper traversal redundant.
 The cost of sorting in \cref{alg:gen-values} is negligible,
-as we expect the number of heads to be small for a single register,
+as we expect the number of heads to be small for a single register.
 
 \textbf{Integration with Automerge}.
 Our implementation is currently a standalone prototype, but we intend to
@@ -1312,21 +1308,20 @@ integrate our algorithm into the Automerge CRDT library in the future.
 Since Automerge stores a monotonically growing set of operations,
 efficient compression of the serialized operation set is an important property.
 Our approach models both undo and redo with a single
-operation type whose extra payload consists only of a single \gls*{opid}.
+operation type whose extra payload consists of just one \gls*{opid}.
 Since every undo and redo creates a new \restopkind{} that is added
-to the set,
-the undo and redo stacks are implicitly stored within the operation set and
+to the operation set,
+the undo and redo stacks are implicitly stored within it and
 can be reconstructed upon loading the document to support undo and redo
 across sessions without additional persistency overhead.
-
 If an application developer does not require undo and redo functionality,
 the value resolution algorithm will be the same as without it,
-making users of the library only pay for what they use.
+making library users only pay for what they use.
 In terms of space complexity, the additional overhead are
 the undo and redo stacks which can be disabled if undo is not required or
-bounded if arbitrary undo depth support is not wanted.
+bounded if arbitrary undo depth is not wanted.
 
-Finally, we remark a possibility to prune the history under a special circumstance.
+Finally, we remark an opportunity to prune the history.
 Imagine a user undoing a few times and then redoing just as many times
 to see the document in the past and then returning to the original state.
 We call such a sequence of undo and redo effect-free.
