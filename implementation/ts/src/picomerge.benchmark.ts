@@ -103,7 +103,7 @@ const altUndoRedoSeqUndoResults = lengths.map((length) => {
   const undo: BenchmarkSuite = {
     name: `one undo after an undo/redo sequence of length ${length}`,
     beforeEach: () => {
-      instance = generateUndoRedoSequence("A", [1, 2], length - 1)[0];
+      instance = generateUndoRedoSequence("A", [1], length - 1)[0];
     },
     benchmarks: {
       ["undo"]: () => {
@@ -118,7 +118,7 @@ const altUndoRedoSeqRedoResults = lengths.map((length) => {
   const redo: BenchmarkSuite = {
     name: `one redo after an undo/redo sequence of length ${length}`,
     beforeEach: () => {
-      instance = generateUndoRedoSequence("A", [1, 2], length - 1)[0];
+      instance = generateUndoRedoSequence("A", [1], length - 1)[0];
       instance.undo();
     },
     benchmarks: {
@@ -134,7 +134,7 @@ const altUndoRedoSeqRedoResultsWithCacheOpt = lengths.map((length) => {
   const redo: BenchmarkSuite = {
     name: `one redo after an undo/redo sequence of length ${length} (with cache opt)`,
     beforeEach: () => {
-      instance = generateUndoRedoSequence("A", [1, 2], length - 1, true)[0];
+      instance = generateUndoRedoSequence("A", [1], length - 1, true)[0];
       instance.undo();
     },
     benchmarks: {
@@ -190,10 +190,14 @@ const undoRedoSeqRedoResults = lengths.map((length) => {
   return [length, redo] as const;
 });
 
-const extractMeanFromBench = (name: string, results: BenchmarkResults) => {
+const extractMeasureFromBench = (
+  name: string,
+  results: BenchmarkResults,
+  measure: Exclude<keyof BenchmarkResult, "measurements">,
+) => {
   const benchmark = results.benchmarks[name];
   if (!benchmark) throw new Error(`Benchmark ${name} not found`);
-  return benchmark.mean;
+  return benchmark[measure];
 };
 
 const toDataPoint = ([x, y]: [number, number]) => {
@@ -204,7 +208,7 @@ const extractRelevant = (
   [x, results]: readonly [number, BenchmarkResults],
   name: string,
 ) => {
-  return toDataPoint([x, extractMeanFromBench(name, results)]);
+  return toDataPoint([x, extractMeasureFromBench(name, results, "median")]);
 };
 
 const driveBenchmark = (

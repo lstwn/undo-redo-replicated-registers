@@ -1575,7 +1575,7 @@ Yjs' undo behavior is recorded with unit tests.
 \begin{tikzpicture}
 \begin{axis}[
   ybar,
-  ylabel={Runtime in ms},
+  ylabel={Median runtime in ms over 1024 runs},
   axis y line=left,
   ymin = 0,
   xlabel={Length of alternating undo-redo sequence ($n$)},
@@ -1589,26 +1589,26 @@ Yjs' undo behavior is recorded with unit tests.
 
 % undo
 \addplot+ coordinates {
-(200, 0.00504857866326347)
-(400, 0.005509669485036284)
-(600, 0.006512108666356653)
-(800, 0.007120864116586745)
+(200, 0.005376994609832764)
+(400, 0.004238009452819824)
+(600, 0.004424989223480225)
+(800, 0.005043983459472656)
 };
 
 % redo without cache opt
 \addplot+ coordinates {
-(200, 0.11390662190387957)
-(400, 0.3034253417572472)
-(600, 0.5630059454997536)
-(800, 0.9230491668859031)
+(200, 0.08157795667648315)
+(400, 0.22508305311203003)
+(600, 0.43157899379730225)
+(800, 0.7744320034980774)
 }; 
 
 % redo with cache opt
 \addplot+ coordinates {
-(200, 0.0034364885359536856)
-(400, 0.00369966629659757)
-(600, 0.0026536431978456676)
-(800, 0.0034199498768430203)
+(200, 0.002785980701446533)
+(400, 0.00341796875)
+(600, 0.003712952136993408)
+(800, 0.004239976406097412)
 };
 
 \legend{Undo, Redo, Redo + Caching};
@@ -1624,7 +1624,7 @@ Yjs' undo behavior is recorded with unit tests.
 To support the theoretical runtime analysis from \cref{sec:evaluation}
 we benchmarked our reference implementation.
 The benchmarking was conducted on a 2019 MacBook Pro with a 
-2.6 GHz 6-Core Intel Core i7 processor and Node version 18.17.1.
+2.6 GHz 6-Core Intel Core i7 processor and Node version 18.19.1.
 
 \Cref{fig:runtime-undo-redo-alt} demonstrates that caching preserves
 the constant runtime of the algorithm even in the worst case scenario of
@@ -1632,8 +1632,7 @@ an alternating undo-redo sequence.
 A length of an alternating undo-redo sequence of $n$ translates into
 a linear operation history of one \setopkind{} (to enable undoing),
 followed by $n$ pairs of an undo and a redo.
-%% TODO: median
-The figure shows the mean runtime to resolve the head(s) to the
+The figure shows the median runtime to resolve the head to the
 register's values over 1024 runs for such sequences of
 lengths 200, 400, 600, and 800, if the head is
 
@@ -1643,13 +1642,22 @@ lengths 200, 400, 600, and 800, if the head is
   \item and a \restopkind{} from a redo but with caching (brown).
 \end{itemize}
 
-The findings show that without caching there is a linear runtime w.r.t. $n$.
+The findings show that without caching the algorithm's runtime is linear
+w.r.t. $n$.
 Enabling caching turns the algorithm into a constant time algorithm,
 irrespective of the length of the operation history.
 Furthermore, it indicates that if space is more precious than runtime,
-the price to pay for the traversal may be acceptable,
+the price to pay for the traversal without caching may be acceptable,
 as even for alternating undo-redo sequences of length 800,
 which we believe to be rare in practice, the runtime is below a millisecond.
+
+This demonstrates that for linear operation histories, i.e., without concurrency,
+the runtime is constant with caching.
+We point out that a non-linear operation history can translate into resolving
+multiple linear operation histories, in case a \restopkind{}'s anchor
+is merge operation.
+If, however, the number of predecessors of an anchor is assumed to be bounded,
+the constant runtime property remains.
 
 \end{document}
 \endinput
