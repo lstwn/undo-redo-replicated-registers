@@ -1625,8 +1625,10 @@ The benchmarking was conducted on a 2019 MacBook Pro with a
 
 \Cref{fig:runtime-undo-redo-alt} demonstrates that caching preserves
 the constant runtime of the algorithm even in the worst case scenario of
-an alternating undo-redo sequence.
-A length of an alternating undo-redo sequence of $n$ translates into
+resolving a redo of an alternating undo-redo sequence, or more general,
+any operation history that causes anchors' predecessors to repeatedly be
+\restopkind{}s themselves.
+A length $n$ of an alternating undo-redo sequence translates into
 a linear operation history of one \setopkind{} (to enable undoing),
 followed by $n$ pairs of an undo and a redo.
 The figure shows the median runtime to resolve the head to the
@@ -1648,13 +1650,13 @@ the price to pay for the traversal without caching may be acceptable,
 as even for alternating undo-redo sequences of length 800,
 which we believe to be rare in practice, the runtime is below a millisecond.
 
-This demonstrates that for linear operation histories, i.e., without concurrency,
-the runtime is constant with caching.
-We point out that a non-linear operation history can translate into resolving
-multiple linear operation histories, in case a \restopkind{}'s anchor
-is merge operation.
+On the other hand, resolving a non-linear operation history (one which had
+concurrent edits) can translate into resolving multiple, albeit shorter,
+linear operation histories, in case some encountered \restopkind{}'s anchor
+is a merge operation.
 If, however, the number of predecessors of an anchor is assumed to be bounded,
-the constant runtime property remains.
+e.g., due to a limited number of collaborators on the \gls{mvr},
+the constant runtime property remains, as long as caching is used.
 
 \end{document}
 \endinput
