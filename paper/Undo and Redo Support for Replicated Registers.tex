@@ -45,6 +45,7 @@
   arrows, arrows.meta,
   calc, backgrounds, quotes,
   pgfplots.statistics, pgfplots.colorbrewer,
+  patterns
 }
 \tikzset{
   op/.style={
@@ -1585,7 +1586,7 @@ Yjs' undo behavior is recorded with unit tests.
 ] 
 
 % undo
-\addplot+ coordinates {
+\addplot+[ybar, blue!60, fill=blue!40, postaction={}] coordinates {
 (200, 0.005376994609832764)
 (400, 0.004238009452819824)
 (600, 0.004424989223480225)
@@ -1593,7 +1594,7 @@ Yjs' undo behavior is recorded with unit tests.
 };
 
 % redo without cache opt
-\addplot+ coordinates {
+\addplot+[ybar, red!80, fill=red!40, postaction={}] coordinates {
 (200, 0.08157795667648315)
 (400, 0.22508305311203003)
 (600, 0.43157899379730225)
@@ -1601,7 +1602,7 @@ Yjs' undo behavior is recorded with unit tests.
 }; 
 
 % redo with cache opt
-\addplot+ coordinates {
+\addplot+[ybar, green!90, fill=green!40, postaction={}] coordinates {
 (200, 0.002785980701446533)
 (400, 0.00341796875)
 (600, 0.003712952136993408)
@@ -1636,9 +1637,9 @@ register's values over 1024 runs for such sequences of
 lengths 200, 400, 600, and 800, if the head is
 
 \begin{itemize}
-  \item a \restopkind{} from an undo (blue),
-  \item a \restopkind{} from a redo (red),
-  \item and a \restopkind{} from a redo but with caching (brown).
+  \item a \restopkind{} from an undo (blue, first bar),
+  \item a \restopkind{} from a redo (red, middle bar),
+  \item and a \restopkind{} from a redo but with caching (green, last bar).
 \end{itemize}
 
 The findings show that without caching the algorithm's runtime is linear
