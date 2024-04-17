@@ -1,5 +1,5 @@
 {
-  "latex-workshop.latex.recipe.default": "lualatexmk",
+  "latex-workshop.latex.recipe.default": "pdflatexmk",
   "latex-workshop.latex.recipes": [
     {
       "name": "lualatexmk",
