@@ -80,7 +80,7 @@
 \metroset{numbering=fraction,progressbar=frametitle,block=fill}
 \setbeamertemplate{section in toc}[sections numbered]
 \def\black{black}
-\def\green{green!60!black}
+\def\green{green!70!black}
 \def\red{red}
 \def\maxheightshare{0.8}
 
@@ -198,7 +198,7 @@
     }
 
     \def\black{black}
-    \def\green{green!60!black}
+    \def\green{green!70!black}
     \def\red{red}
     \def\upperoffset{22pt}
     \def\casemargin{22pt}
@@ -699,24 +699,25 @@
 
 \newcommand{\cbox}[1]{\colorbox{#1}{\phantom{R}}}
 
-\newcommand{\registerx}[1]{
+\newcommand{\mvr}[1]{
   \begin{tikzpicture}[]
     \tikzset{
       sitem/.style={
-        minimum width=17px,
+        minimum width=40px,
         minimum height=17px,
         rectangle,
         font=\scriptsize,
       }
     }
-    \node[font=\Large] (empty) at (0,0.46) {$\bot$};
-    \foreach \x [count=\i] in #1 {%
-      \ifnum\i=1%
-        \node[double,sitem,draw,fill=white] (s\i) at (0,0.59*\i) {\x};
-      \else%
+    \node[font=\Large,minimum width=40px] (empty) at (0,0.46) {$\bot$};
+    \foreach \x [count=\i] in #1 {
+      \ifnum \i=1
+        \node[sitem,draw,fill=gray!20] (s\i) at (0,0.59*\i) {\x};
+      \else
         \node[sitem,draw,fill=white] (s\i) at (0,0.59*\i) {\x};
-      \fi%
+      \fi
     }
+  \end{tikzpicture}
 }
 \newcommand{\stack}[1]{
   \begin{tikzpicture}[]
@@ -757,7 +758,7 @@
 
     \node[label={[slabel]below:undo\\stack},anchor=south west] (undostack) {\stack{#2}};
     \node[label={[slabel]below:redo\\stack},right=\stackdist of undostack.south east,anchor=south west] (redostack) {\stack{#3}};
-    \node[label={[slabel]below:register},right=\stackdist of redostack.south east,anchor=south west] (register) {\stack{#4}};
+    \node[label={[slabel]below:register},right=\stackdist of redostack.south east,anchor=south west] (register) {\mvr{#4}};
 
     \node[ulabel,align=center,below=0.75cm of redostack.south] (userid) {#1's State};
   \end{tikzpicture}
@@ -782,7 +783,7 @@
         \node[op,above right=\dist of a1] (a2) {\setop{2}{A}{\cbox{red}}} edge [pred] (a1);
         }%
         \onslide<3->{
-        \node[op,below right=\dist of a1] (b2) {\setop{2}{B}{\cbox{green}}} edge [pred] (a1);
+        \node[op,below right=\dist of a1] (b2) {\setop{2}{B}{\cbox{\green}}} edge [pred] (a1);
         }%
 
         \onslide<4->{
@@ -792,14 +793,14 @@
         \onslide<5->{
         \node[op,above right=\dist of a3] (a4) {\undop{4}{A}{3}{A}} edge [pred] (a3) edge [anchorref,bend right] (a3);
         }%
-        \onslide<6>{
-        \node[op,below right=\dist of a3] (b4_1) {\setop{4}{B}{\cbox{orange}}} edge [pred] (a3);
-        }%
-        \onslide<7->{
+        % \onslide<6>{
+        % \node[op,below right=\dist of a3] (b4_1) {\setop{4}{B}{\cbox{orange}}} edge [pred] (a3);
+        % }%
+        \onslide<6->{
         \node[op,below right=\dist of a3] (b4_2) {\undop{4}{B}{2}{B}} edge [pred] (a3) edge [anchorref] (b2);
         }%
 
-        \onslide<8->{
+        \onslide<7->{
         \node[op,below right=\dist of a4] (b5) {\redop{5}{B}{4}{B}} edge [pred] (a4) edge [pred] (b4_2) edge [anchorref,bend left] (b4_2);
         }%
       \end{tikzpicture}
@@ -815,7 +816,7 @@
       \userstate{A}{{\setop{1}{A}{\cbox{black}},\setop{2}{A}{\cbox{red}}}}{{}}{{\cbox{red}}}
       }}%
       {\only<3>{
-      \userstate{A}{{\setop{1}{A}{\cbox{black}},\setop{2}{A}{\cbox{red}}}}{{}}{{\cbox{green},\cbox{red}}}
+      \userstate{A}{{\setop{1}{A}{\cbox{black}},\setop{2}{A}{\cbox{red}}}}{{}}{{\cbox{\green},\cbox{red}}}
       }}%
       {\only<4>{
       \userstate{A}
@@ -827,21 +828,21 @@
       \userstate{A}
         {{\setop{1}{A}{\cbox{black}},\setop{2}{A}{\cbox{red}}}}
         {{\undop{4}{A}{3}{A}}}
-        {{\cbox{green},\cbox{red}}}
+        {{\cbox{\green},\cbox{red}}}
       }}%
+      % {\only<6>{
+      % \userstate{A}
+      %   {{\setop{1}{A}{\cbox{black}},\setop{2}{A}{\cbox{red}}}}
+      %   {{\undop{4}{A}{3}{A}}}
+      %   {{\cbox{orange},\cbox{\green},\cbox{red}}}
+      % }}%
       {\only<6>{
       \userstate{A}
         {{\setop{1}{A}{\cbox{black}},\setop{2}{A}{\cbox{red}}}}
         {{\undop{4}{A}{3}{A}}}
-        {{\cbox{orange},\cbox{green},\cbox{red}}}
+        {{\cbox{black},\cbox{\green},\cbox{red}}}
       }}%
       {\only<7>{
-      \userstate{A}
-        {{\setop{1}{A}{\cbox{black}},\setop{2}{A}{\cbox{red}}}}
-        {{\undop{4}{A}{3}{A}}}
-        {{\cbox{black},\cbox{green},\cbox{red}}}
-      }}%
-      {\only<8>{
       \userstate{A}
         {{\setop{1}{A}{\cbox{black}},\setop{2}{A}{\cbox{red}}}}
         {{\undop{4}{A}{3}{A}}}
@@ -857,35 +858,35 @@
       \userstate{B}{{}}{{}}{{\cbox{red}}}
       }}%
       {\only<3>{
-      \userstate{B}{{\setop{2}{B}{\cbox{green}}}}{{}}{{\cbox{green},\cbox{red}}}
+      \userstate{B}{{\setop{2}{B}{\cbox{\green}}}}{{}}{{\cbox{\green},\cbox{red}}}
       }}%
       {\only<4>{
       \userstate{B}
-        {{\setop{2}{B}{\cbox{green}}}}
+        {{\setop{2}{B}{\cbox{\green}}}}
         {{}}
         {{\cbox{blue}}}
       }}%
       {\only<5>{
       \userstate{B}
-        {{\setop{2}{B}{\cbox{green}}}}
+        {{\setop{2}{B}{\cbox{\green}}}}
         {{}}
-        {{\cbox{green},\cbox{red}}}
+        {{\cbox{\green},\cbox{red}}}
       }}%
+      % {\only<6>{
+      % \userstate{B}
+      %   {{\setop{2}{B}{\cbox{\green}},\setop{4}{B}{\cbox{orange}}}}
+      %   {{}}
+      %   {{\cbox{orange},\cbox{\green},\cbox{red}}}
+      % }}%
       {\only<6>{
-      \userstate{B}
-        {{\setop{2}{B}{\cbox{green}},\setop{4}{B}{\cbox{orange}}}}
-        {{}}
-        {{\cbox{orange},\cbox{green},\cbox{red}}}
-      }}%
-      {\only<7>{
       \userstate{B}
         {{}}
         {{\undop{4}{B}{2}{B}}}
-        {{\cbox{black},\cbox{green},\cbox{red}}}
+        {{\cbox{black},\cbox{\green},\cbox{red}}}
       }}%
-      {\only<8>{
+      {\only<7>{
       \userstate{B}
-        {{\setop{2}{B}{\cbox{green}}}}
+        {{\setop{2}{B}{\cbox{\green}}}}
         {{}}
         {{\cbox{blue}}}
       }}%
@@ -947,8 +948,6 @@
   \end{figure}
 \end{frame}
 
-\section{Part III: Experimental Evaluation}
-
 \begin{frame}[fragile,plain]
   \centering
   \begin{figure}[h]
@@ -985,7 +984,7 @@
   }; 
 
   % redo with cache opt
-  \addplot+[ybar, green!90, fill=green!40, postaction={}] coordinates {
+  \addplot+[ybar, green!40!black, fill=\green, postaction={}] coordinates {
   (200, 0.002785980701446533)
   (400, 0.00341796875)
   (600, 0.003712952136993408)
