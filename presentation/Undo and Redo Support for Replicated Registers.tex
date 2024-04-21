@@ -445,7 +445,7 @@
     }
 
     \def\black{black}
-    \def\green{green!60!black}
+    \def\green{green!70!black}
     \def\red{red}
     \def\upperoffset{22pt}
     \def\casemargin{22pt}
@@ -786,21 +786,21 @@
         \node[op,below right=\dist of a1] (b2) {\setop{2}{B}{\cbox{\green}}} edge [pred] (a1);
         }%
 
-        \onslide<4->{
+        \onslide<5->{
         \node[op,below right=\dist of a2] (a3) {\setop{3}{A}{\cbox{blue}}} edge [pred] (a2) edge [pred] (b2);
         }%
 
-        \onslide<5->{
+        \onslide<6->{
         \node[op,above right=\dist of a3] (a4) {\undop{4}{A}{3}{A}} edge [pred] (a3) edge [anchorref,bend right] (a3);
         }%
         % \onslide<6>{
         % \node[op,below right=\dist of a3] (b4_1) {\setop{4}{B}{\cbox{orange}}} edge [pred] (a3);
         % }%
-        \onslide<6->{
+        \onslide<7->{
         \node[op,below right=\dist of a3] (b4_2) {\undop{4}{B}{2}{B}} edge [pred] (a3) edge [anchorref] (b2);
         }%
 
-        \onslide<7->{
+        \onslide<9->{
         \node[op,below right=\dist of a4] (b5) {\redop{5}{B}{4}{B}} edge [pred] (a4) edge [pred] (b4_2) edge [anchorref,bend left] (b4_2);
         }%
       \end{tikzpicture}
@@ -812,19 +812,19 @@
       {\only<1>{
       \userstate{A}{{\setop{1}{A}{\cbox{black}}}}{{}}{{\cbox{black}}}
       }}%
-      {\only<2>{
+      {\only<2-3>{
       \userstate{A}{{\setop{1}{A}{\cbox{black}},\setop{2}{A}{\cbox{red}}}}{{}}{{\cbox{red}}}
       }}%
-      {\only<3>{
+      {\only<4>{
       \userstate{A}{{\setop{1}{A}{\cbox{black}},\setop{2}{A}{\cbox{red}}}}{{}}{{\cbox{\green},\cbox{red}}}
       }}%
-      {\only<4>{
+      {\only<5>{
       \userstate{A}
         {{\setop{1}{A}{\cbox{black}},\setop{2}{A}{\cbox{red}},\setop{3}{A}{\cbox{blue}}}}
         {{}}
         {{\cbox{blue}}}
       }}%
-      {\only<5>{
+      {\only<6-7>{
       \userstate{A}
         {{\setop{1}{A}{\cbox{black}},\setop{2}{A}{\cbox{red}}}}
         {{\undop{4}{A}{3}{A}}}
@@ -836,13 +836,13 @@
       %   {{\undop{4}{A}{3}{A}}}
       %   {{\cbox{orange},\cbox{\green},\cbox{red}}}
       % }}%
-      {\only<6>{
+      {\only<8>{
       \userstate{A}
         {{\setop{1}{A}{\cbox{black}},\setop{2}{A}{\cbox{red}}}}
         {{\undop{4}{A}{3}{A}}}
         {{\cbox{black},\cbox{\green},\cbox{red}}}
       }}%
-      {\only<7>{
+      {\only<9>{
       \userstate{A}
         {{\setop{1}{A}{\cbox{black}},\setop{2}{A}{\cbox{red}}}}
         {{\undop{4}{A}{3}{A}}}
@@ -851,26 +851,32 @@
     };
 
     \node[below=\statedist of graph.south east,anchor=south,xshift=+\xshift] (bstate) {
-      {\only<1>{
+      {\only<1-2>{
       \userstate{B}{{}}{{}}{{\cbox{black}}}
       }}%
-      {\only<2>{
-      \userstate{B}{{}}{{}}{{\cbox{red}}}
-      }}%
       {\only<3>{
-      \userstate{B}{{\setop{2}{B}{\cbox{\green}}}}{{}}{{\cbox{\green},\cbox{red}}}
+      \userstate{B}
+        {{\setop{2}{B}{\cbox{\green}}}}
+        {{}}
+        {{\cbox{\green}}}
       }}%
       {\only<4>{
       \userstate{B}
         {{\setop{2}{B}{\cbox{\green}}}}
         {{}}
-        {{\cbox{blue}}}
+        {{\cbox{\green},\cbox{red}}}
       }}%
-      {\only<5>{
+      {\only<5-6>{
       \userstate{B}
         {{\setop{2}{B}{\cbox{\green}}}}
         {{}}
-        {{\cbox{\green},\cbox{red}}}
+        {{\cbox{blue}}}
+      }}%
+      {\only<7>{
+      \userstate{B}
+        {{}}
+        {{\undop{4}{B}{2}{B}}}
+        {{\cbox{black}}}
       }}%
       % {\only<6>{
       % \userstate{B}
@@ -878,20 +884,43 @@
       %   {{}}
       %   {{\cbox{orange},\cbox{\green},\cbox{red}}}
       % }}%
-      {\only<6>{
+      {\only<8>{
       \userstate{B}
         {{}}
         {{\undop{4}{B}{2}{B}}}
         {{\cbox{black},\cbox{\green},\cbox{red}}}
       }}%
-      {\only<7>{
+      {\only<9>{
       \userstate{B}
         {{\setop{2}{B}{\cbox{\green}}}}
         {{}}
         {{\cbox{blue}}}
       }}%
     };
-    
+
+    \def\offset{30pt}
+
+    \tikzset{
+      network/.style={
+        <->,
+        >={Stealth[round]},
+        dashed,
+        font=\footnotesize,
+      },
+      npart/.style={
+        dashed,
+        font=\footnotesize,
+      },
+    }
+
+    \only<1,4-5,8-9>{
+      \draw ($(astate.south east)+(0,+\offset)$) edge [network,"Network Communication"] ($(bstate.south west)+(0,+\offset)$);
+    }
+    \coordinate (mid) at ($(astate.south east)!0.5!(bstate.south west)$);
+    \only<2-3,6-7>{
+      \draw (mid) edge [npart,"Network Partition" {rotate=-90,anchor=center,text depth=0.5cm}] ($(mid)+(0,+82px)$);
+    }
+
   \end{tikzpicture}
 
   \end{adjustbox}
